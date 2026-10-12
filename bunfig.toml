@@ -1,0 +1,9 @@
+# Bun configuration
+# Docs: https://bun.sh/docs/runtime/bunfig
+
+[install]
+# Only install package versions published at least 7 days ago (supply-chain guard).
+minimumReleaseAge = 604800
+# Packages that bypass the 7-day minimum age requirement.
+# @neocore/* is published internally and must be installable right after a release.
+minimumReleaseAgeExcludes = ["@neocore/lib-components", "encrypt-storage"]

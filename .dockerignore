@@ -1,0 +1,34 @@
+# Build context for the Dockerfile. Two build routes need different inputs:
+#   DIST_STAGE=build    (local) -> `COPY . .` + `bun run build`: sources + .env
+#   DIST_STAGE=prebuilt (CI)    -> `COPY dist /app/dist`: only dist/ + nginx.conf
+# Deliberately NOT excluded:
+#   - dist/  : source of the `prebuilt` stage in CI.
+#   - .env   : read by load-env.js in the local build; it stays in the
+#              discarded `build` stage and never reaches the runtime image.
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies and caches (reinstalled inside the image)
+node_modules
+.bun-cache
+.angular
+dist-test
+coverage
+
+# Secrets that must never enter a build context (use --secret for .npmrc)
+.npmrc
+.env.ignore
+
+# Editors, agents and docs
+.vscode
+.idea
+.agents
+odd
+*.md
+
+# Docker files themselves
+compose.yml
+.dockerignore

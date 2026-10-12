@@ -1,0 +1,55 @@
+{
+  // Biome is the only linter/formatter of this repo (no ESLint, no Prettier).
+  // HTML and SCSS are excluded: Biome's Angular template support is not stable yet.
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!!**/node_modules",
+      "!!**/coverage",
+      "!!**/build",
+      "!!**/dist",
+      "!!**/.angular",
+      "!!**/.vscode",
+      "!!**/odd",
+      "!!**/src/environments",
+      // Rewritten by scripts/generate-module.js (JSON.stringify layout).
+      "!!**/tsconfig.federation.json",
+      "!!**/*.html",
+      "!!**/*.scss"
+    ],
+    "ignoreUnknown": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      // Recommended rules are on by default.
+      "style": {
+        // Angular DI and decorators rely on value imports; keep `import type`
+        // a manual decision instead of an auto-fix.
+        "useImportType": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    },
+    "parser": {
+      // Required to parse Angular decorators on class properties.
+      "unsafeParameterDecoratorsEnabled": true
+    }
+  }
+}

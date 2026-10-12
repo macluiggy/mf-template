@@ -1,0 +1,20 @@
+<section>
+  <h1>Template</h1>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p role="status">Loading…</p>
+    }
+    @case ('error') {
+      <p role="alert">The records could not be loaded.</p>
+      <button type="button" (click)="load()">Retry</button>
+    }
+    @case ('ready') {
+      <app-template-table [items]="items()" (selected)="onSelected($event)" />
+      <p>Total: {{ total() }}</p>
+      @if (lastSelected(); as item) {
+        <p>Selected: {{ item.name }}</p>
+      }
+    }
+  }
+</section>
