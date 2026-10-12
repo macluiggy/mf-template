@@ -12,7 +12,7 @@ bun run generate:module -- --name=user-profile --expose   # module + exposed to 
 
 | Path | Role |
 |---|---|
-| `template.routes.ts` | `TemplateRoutes: Routes` — the exposed entry. Root route carries `provideMfHttpClient()` |
+| `template.routes.ts` | `TemplateRoutes: Routes` — the exposed entry. No HttpClient providers: hosted requests use the host's interceptors |
 | `pages/template-list/` | Container page: signals state, calls the service, publishes PubSub topics to the host |
 | `components/template-table/` | Presentational component: `input()`/`output()` only, no services |
 | `services/template.service.ts` | HTTP calls: `${environment.apiUrl}/${MsPrefixEnum.CORE}/template` + permission headers |

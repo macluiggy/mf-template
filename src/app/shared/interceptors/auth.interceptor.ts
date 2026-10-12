@@ -14,7 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const storage = inject(StorageService);
   const device = inject(DeviceDetectorService);
 
-  const deviceInfo = Object.entries(device.getDeviceInfo())
+  const deviceInfo = Object.entries(device.deviceInfo())
     .map(([key, value]) => `${key}: ${value}`)
     .join(', ');
 

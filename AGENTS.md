@@ -18,8 +18,8 @@ live in [`.agents/`](.agents/); open the relevant doc before touching that area.
   (`@angular/*` 22.1.7, `@angular/build`/`cli` 22.1.8, TypeScript ~6.0.3). Federation shares them as
   strict singletons: a drift breaks loading in the host. Never use `^`/`~` on `@angular/*`.
 - ⚠️ [Exposes key `./X` must equal the exported symbol `X`](.agents/host-integration.md#exposing-a-module)
-  — the host resolves `m[exposedModule]`. Each exposed `Routes` array registers `provideMfHttpClient()`
-  in its root route `providers`, because the host never runs this app's `app.config.ts`.
+  — the host resolves `m[exposedModule]`. [Exposed `Routes` never provide an HttpClient](.agents/host-integration.md#interceptors):
+  when hosted, requests use the host's HttpClient and interceptors (auth, errors, loader), like frontcore.
 - ⚠️ [`SECRET_KEY` must be identical to the host's](.agents/environment.md) — the access token lives in
   encrypted localStorage written by the host; a different key reads nothing, silently.
 - ⚠️ [Talk to the host only through the PubSub topics](.agents/host-integration.md#pubsub-contract)
@@ -38,7 +38,7 @@ live in [`.agents/`](.agents/); open the relevant doc before touching that area.
 <!-- capability-map:start -->
 | If you need… | Already exists | Entry point | Read |
 |---|---|---|---|
-| HttpClient with auth for every request (also: interceptor, Bearer, x-device-info) | `provideMfHttpClient()` + functional `authInterceptor` (Bearer from host token, `x-device-info`) | `src/app/shared/providers/http.providers.ts`, `src/app/shared/interceptors/auth.interceptor.ts` | [`.agents/host-integration.md`](.agents/host-integration.md#interceptors) |
+| HttpClient with auth for standalone dev (also: interceptor, Bearer, x-device-info; hosted mode uses the host's) | `provideMfHttpClient()` + functional `authInterceptor` (Bearer from host token, `x-device-info`) | `src/app/shared/providers/http.providers.ts`, `src/app/shared/interceptors/auth.interceptor.ts` | [`.agents/host-integration.md`](.agents/host-integration.md#interceptors) |
 | Read/write encrypted localStorage shared with the host (also: token, session, encrypt-storage) | `StorageService` + `StorageEnum` (same key names as host/frontcore) | `src/app/shared/services/storage.service.ts`, `src/app/shared/enums/storage.enum.ts` | [`.agents/environment.md`](.agents/environment.md) |
 | Show loader/toasts in the host (also: notifications, pubsub, events) | `PubSubService` + `PubSubTopic` | `src/app/shared/services/pubsub.service.ts`, `src/app/shared/enums/pubsub-topic.enum.ts` | [`.agents/host-integration.md`](.agents/host-integration.md#pubsub-contract) |
 | Permission headers for the gateway (also: x-api-key, resource:action) | `buildPermissionHeaders(resource, action)` | `src/app/shared/helpers/permission-headers.helper.ts` | [`.agents/architecture.md`](.agents/architecture.md) |

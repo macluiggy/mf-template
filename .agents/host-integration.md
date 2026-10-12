@@ -60,17 +60,16 @@ exposes: {
 
 ## Interceptors
 
-The host never executes this app's `app.config.ts`; it only imports the exposed file. Therefore:
+The host never executes this app's `app.config.ts`; it only imports the exposed file. The template
+follows the same rule as frontcore:
 
-- `provideMfHttpClient()` (`src/app/shared/providers/http.providers.ts`) is the single HttpClient
-  configuration of the MF.
-- It is registered in `app.config.ts` (standalone dev) **and** in the `providers` of the root route of
-  every exposed `Routes` array (hosted mode).
-- New interceptors are added to `provideMfHttpClient()` only, so both modes stay identical.
-- Consequence: requests made by the remote run the remote's interceptors, not the host's
-  (host loader/error interceptors do not see them). Publish `loading`/`error` through `PubSubService`
-  when the user must see them. If a fork needs the host chain too, add `withRequestsMadeViaParent()`
-  to `provideMfHttpClient()` and check the host interceptors are idempotent with the remote ones.
+- **Hosted mode:** exposed `Routes` do **not** provide an HttpClient. Requests go through the host's
+  HttpClient and its interceptors (`AuthInterceptor`, `ErrorHandlerInterceptor`, `loaderInterceptor`
+  in `frontcontainer/src/app/app.config.ts`), so the host shows the loader and error toasts.
+- **Standalone dev (`bun run start`):** `app.config.ts` registers `provideMfHttpClient()`
+  (`src/app/shared/providers/http.providers.ts`) with the MF's own `authInterceptor`.
+- Never add `provideHttpClient()`/`provideMfHttpClient()` to the `providers` of an exposed route: it
+  creates a separate HttpClient that bypasses the host interceptors.
 
 ## PubSub contract
 

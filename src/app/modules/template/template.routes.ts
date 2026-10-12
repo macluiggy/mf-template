@@ -1,17 +1,16 @@
 import type { Routes } from '@angular/router';
-import { provideMfHttpClient } from '../../shared/providers/http.providers';
 
 /**
  * Exposed to the host as `./TemplateRoutes` (federation.config.mjs). The host
  * mounts it with loadChildren under the manifest `path` (typeRemote 'module').
  *
- * The root route carries the MF providers (HttpClient + interceptors) because
- * the host never runs this app's app.config.ts.
+ * No HttpClient is provided here on purpose: when hosted, requests use the
+ * host's HttpClient and its interceptors (auth, error handler, loader), the
+ * same as frontcore. app.config.ts provides one only for standalone dev.
  */
 export const TemplateRoutes: Routes = [
   {
     path: '',
-    providers: [provideMfHttpClient()],
     children: [
       {
         path: '',

@@ -3,7 +3,7 @@ import type { EnvironmentProviders } from '@angular/core';
 import { authInterceptor } from '../interceptors/auth.interceptor';
 
 /**
- * The single HttpClient configuration of this MF.
+ * The single HttpClient configuration httpof this MF.
  *
  * Register it in BOTH places:
  *   - `app.config.ts`, for standalone development (`bun run start`);

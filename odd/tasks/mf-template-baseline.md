@@ -93,5 +93,11 @@ Final checks (with `SECRET_KEY=change-me-use-the-host-secret` exported, see open
 Open issue: the local, untracked `.env` was created from an earlier `.env.example` whose
 SECRET_KEY had 9 chars; load-env now rejects it. Fix locally with `cp .env.ignore .env`.
 
+- Follow-up (inline, user decision 2026-10-12: "behave like frontcore") — exposed `TemplateRoutes`
+  no longer provides an HttpClient; hosted requests use the host's HttpClient + interceptors
+  (auth, error handler, loader), as frontcore does. `provideMfHttpClient()` stays in app.config.ts
+  for standalone dev. Checks: lint OK, vitest 27/27, node:test 8/8, build OK exposing ./TemplateRoutes.
+  T1–T8 were committed by the user as 5486a52.
+
 ## Next step
 Parent: create the work-unit commits above, fix the local `.env`, then decide on push/MR.
