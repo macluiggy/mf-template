@@ -2,16 +2,13 @@
 /**
  * Module generator: clones `src/app/modules/template` into a new feature module.
  *
- *   bun run generate:module -- --name=<kebab-name> [--expose]
- *
- * --expose also registers `./<Pascal>Routes` in federation.config.mjs and
- * tsconfig.federation.json so the host can load it.
+ *   bun run generate:module -- --name=<kebab-name>
  *
  * Naming rules applied to file names and contents (see transformContent):
  *   template-x / template.x  -> <kebab>-x / <kebab>.x   (files, selectors, imports)
  *   TEMPLATE_                -> <CONSTANT>_
- *   Template                 -> <Pascal>                (classes, enums, routes)
- *   template (whole word)    -> <kebab>                 (API path, permission resource)
+ *   Template                 -> <Pascal>                (classes, routes)
+ *   template (whole word)    -> <kebab>                 (API path)
  * Angular keywords (`templateUrl`, `template:`, `ng-template`, `TemplateRef`)
  * are preserved. Identifiers such as `templateItems` are NOT renamed.
  */
@@ -95,32 +92,13 @@ function generateModule(root, cases) {
   return target;
 }
 
-function addExpose(root, cases) {
-  const routesFile = `src/app/modules/${cases.kebab}/${cases.kebab}.routes.ts`;
-  const entry = `'./${cases.pascal}Routes': './${routesFile}',`;
-
-  const federationPath = path.join(root, 'federation.config.mjs');
-  const federation = fs.readFileSync(federationPath, 'utf8');
-  if (!federation.includes(entry)) {
-    const match = /exposes:\s*\{\n([\s\S]*?)(\n(\s*)\},)/.exec(federation);
-    if (!match) {
-      throw new Error('Could not find the `exposes: { ... },` block in federation.config.mjs');
-    }
-    const indent = `${match[3]}  `;
-    const insertAt = match.index + match[0].length - match[2].length;
-    fs.writeFileSync(
-      federationPath,
-      `${federation.slice(0, insertAt)}\n${indent}${entry}${federation.slice(insertAt)}`,
-    );
-  }
-
-  const tsconfigPath = path.join(root, 'tsconfig.federation.json');
-  const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
-  tsconfig.files = tsconfig.files ?? [];
-  if (!tsconfig.files.includes(routesFile)) {
-    tsconfig.files.push(routesFile);
-    fs.writeFileSync(tsconfigPath, `${JSON.stringify(tsconfig, null, 2)}\n`);
-  }
+function nextSteps(cases) {
+  return `
+Next steps:
+  1. Add the lazy route to src/app/app.routes.ts:
+     { path: '${cases.kebab}', loadChildren: () => import('./modules/${cases.kebab}/${cases.kebab}.routes').then((m) => m.${cases.pascal}Routes) },
+  2. Adjust the API path in services/ and the types in interfaces/.
+  3. Run 'bun run format' (longer names can exceed the line width).`;
 }
 
 function main(argv) {
@@ -130,22 +108,7 @@ function main(argv) {
 
   const target = generateModule(root, cases);
   console.info(`✅ Module generated at ${path.relative(root, target)}`);
-
-  if (argv.includes('--expose')) {
-    addExpose(root, cases);
-    console.info(
-      `✅ Exposed as ./${cases.pascal}Routes (federation.config.mjs, tsconfig.federation.json)`,
-    );
-  }
-
-  console.info(`
-Next steps:
-  1. Standalone dev: add to src/app/app.routes.ts
-     { path: '${cases.kebab}', loadChildren: () => import('./modules/${cases.kebab}/${cases.kebab}.routes').then((m) => m.${cases.pascal}Routes) },
-  2. ${argv.includes('--expose') ? 'Register' : 'To load it from the host, add it to `exposes` in federation.config.mjs and tsconfig.federation.json, then register'} it in the ms-core manifest:
-     exposedModule '${cases.pascal}Routes', typeRemote 'module' (see AGENTS.md).
-  3. Adjust the permission resource in enums/${cases.kebab}-action.enum.ts and the API path in services/.
-  4. Run 'bun run format' (longer names can exceed the line width).`);
+  console.info(nextSteps(cases));
 }
 
 if (require.main === module) {
@@ -157,4 +120,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { toCases, transformFileName, transformContent, generateModule, addExpose };
+module.exports = { toCases, transformFileName, transformContent, generateModule, nextSteps };

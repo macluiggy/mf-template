@@ -1,12 +1,8 @@
 import type { Routes } from '@angular/router';
 
 /**
- * Exposed to the host as `./TemplateRoutes` (federation.config.mjs). The host
- * mounts it with loadChildren under the manifest `path` (typeRemote 'module').
- *
- * No HttpClient is provided here on purpose: when hosted, requests use the
- * host's HttpClient and its interceptors (auth, error handler, loader), the
- * same as frontcore. app.config.ts provides one only for standalone dev.
+ * Feature entry, lazy-loaded from `app.routes.ts` with loadChildren.
+ * HttpClient and interceptors come from `app.config.ts` (provideAppHttpClient).
  */
 export const TemplateRoutes: Routes = [
   {

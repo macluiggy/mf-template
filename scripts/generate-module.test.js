@@ -6,13 +6,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
-const {
-  toCases,
-  transformContent,
-  transformFileName,
-  generateModule,
-  addExpose,
-} = require('./generate-module');
+const generator = require('./generate-module');
+
+const { toCases, transformContent, transformFileName, generateModule, nextSteps } = generator;
 
 const cases = toCases('sample-feature');
 
@@ -42,10 +38,9 @@ test('transformContent renames symbols, paths, selectors and constants', () => {
     "import { TemplateService } from './services/template.service';",
     "selector: 'app-template-table',",
     'export const TEMPLATE_PAGE_SIZE = 10;',
-    "RESOURCE = 'template',",
     'export const TemplateRoutes: Routes = [];',
     // biome-ignore lint/suspicious/noTemplateCurlyInString: source code under test
-    '`${environment.apiUrl}/${MsPrefixEnum.CORE}/template`',
+    '`${environment.apiUrl}/template`',
   ].join('\n');
 
   assert.equal(
@@ -54,16 +49,11 @@ test('transformContent renames symbols, paths, selectors and constants', () => {
       "import { SampleFeatureService } from './services/sample-feature.service';",
       "selector: 'app-sample-feature-table',",
       'export const SAMPLE_FEATURE_PAGE_SIZE = 10;',
-      "RESOURCE = 'sample-feature',",
       'export const SampleFeatureRoutes: Routes = [];',
       // biome-ignore lint/suspicious/noTemplateCurlyInString: expected source code
-      '`${environment.apiUrl}/${MsPrefixEnum.CORE}/sample-feature`',
+      '`${environment.apiUrl}/sample-feature`',
     ].join('\n'),
   );
-});
-
-test('transformContent renames a permission string that looks like a key', () => {
-  assert.equal(transformContent("toBe('template:listar')", cases), "toBe('sample-feature:listar')");
 });
 
 test('transformContent keeps Angular template keywords intact', () => {
@@ -97,31 +87,16 @@ test('generateModule clones the template module and refuses to overwrite', () =>
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test('addExpose registers the routes in federation.config.mjs and tsconfig.federation.json', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gen-expose-'));
-  fs.writeFileSync(
-    path.join(root, 'federation.config.mjs'),
-    "export default {\n  exposes: {\n    './TemplateRoutes': './src/app/modules/template/template.routes.ts',\n  },\n};\n",
-  );
-  fs.writeFileSync(
-    path.join(root, 'tsconfig.federation.json'),
-    JSON.stringify({ files: ['src/app/modules/template/template.routes.ts'] }),
-  );
+test('nextSteps prints the lazy route for app.routes.ts', () => {
+  const message = nextSteps(cases);
 
-  addExpose(root, cases);
-  addExpose(root, cases); // idempotent
-
-  const federation = fs.readFileSync(path.join(root, 'federation.config.mjs'), 'utf8');
-  assert.equal(
-    federation.split(
-      "'./SampleFeatureRoutes': './src/app/modules/sample-feature/sample-feature.routes.ts',",
-    ).length,
-    2,
+  assert.match(
+    message,
+    /\{ path: 'sample-feature', loadChildren: \(\) => import\('\.\/modules\/sample-feature\/sample-feature\.routes'\)\.then\(\(m\) => m\.SampleFeatureRoutes\) \}/,
   );
-  const tsconfig = JSON.parse(fs.readFileSync(path.join(root, 'tsconfig.federation.json'), 'utf8'));
-  assert.deepEqual(tsconfig.files, [
-    'src/app/modules/template/template.routes.ts',
-    'src/app/modules/sample-feature/sample-feature.routes.ts',
-  ]);
-  fs.rmSync(root, { recursive: true, force: true });
+  assert.doesNotMatch(message, /federation|expose|manifest|host/i);
+});
+
+test('the generator has no federation expose step', () => {
+  assert.equal(generator.addExpose, undefined);
 });

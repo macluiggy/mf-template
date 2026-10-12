@@ -1,21 +1,19 @@
-# Local development ONLY. The compose files of real environments (dev, quality,
-# pre-production) live on each server and are updated by the pipeline
-# (see `.deploy_base` in .gitlab-ci.yml).
+# Local run of the production image.
 #
 #   docker compose up -d --build
 #   docker compose ps                         # STATUS -> "Up X (healthy)"
-#   curl -i http://localhost:${WEB_PORT:-4250}/remoteEntry.json
+#   curl -i http://localhost:${WEB_PORT:-8080}/
 services:
-  mf-template:
+  app-template:
     build:
       context: .
       dockerfile: Dockerfile
       # DIST_STAGE=build (Dockerfile default): builds inside the image using
       # .env from the build context (or .env.example when it is absent).
       target: runtime
-    container_name: mf-template-dev
+    container_name: app-template
     ports:
-      - "${WEB_PORT:-4250}:80"
+      - "${WEB_PORT:-8080}:80"
     healthcheck:
       # `$$` escapes `$` for Compose: the container shell expands PORT.
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:$${PORT:-80}/health || exit 1"]

@@ -1,8 +1,6 @@
 import type { Routes } from '@angular/router';
 
-// Standalone-dev routing: mirrors how the host mounts the exposed routes
-// (typeRemote 'module' -> loadChildren). The host uses the manifest `path`;
-// here the module is served under the same kind of prefix.
+// Each feature module is lazy-loaded under its own path prefix.
 export const routes: Routes = [
   {
     path: 'template',

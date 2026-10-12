@@ -15,10 +15,9 @@
 node_modules
 .bun-cache
 .angular
-dist-test
 coverage
 
-# Secrets that must never enter a build context (use --secret for .npmrc)
+# Secrets that must never enter a build context
 .npmrc
 .env.ignore
 

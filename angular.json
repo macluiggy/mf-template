@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "mf-template": {
+    "app-template": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -19,44 +19,14 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-architects/native-federation:build",
-          "options": {
-            "cacheExternalArtifacts": true,
-            "tsConfig": "tsconfig.federation.json"
-          },
-          "configurations": {
-            "production": {
-              "target": "mf-template:esbuild:production"
-            },
-            "development": {
-              "target": "mf-template:esbuild:development",
-              "dev": true
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "serve": {
-          "builder": "@angular-architects/native-federation:build",
-          "options": {
-            "target": "mf-template:serve-original:development",
-            "tsConfig": "tsconfig.federation.json",
-            "rebuildDelay": 500,
-            "cacheExternalArtifacts": true,
-            "dev": true,
-            "devServer": true,
-            "port": 0
-          }
-        },
-        "esbuild": {
           "builder": "@angular/build:application",
           "options": {
             "outputPath": "dist",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js", "es-module-shims"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-            "allowedCommonJsDependencies": ["encrypt-storage", "pubsub-js"],
+            "allowedCommonJsDependencies": ["encrypt-storage"],
             "assets": [
               {
                 "glob": "**/*",
@@ -91,47 +61,25 @@
           },
           "defaultConfiguration": "production"
         },
-        "serve-original": {
+        "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "mf-template:esbuild:production"
+              "buildTarget": "app-template:build:production"
             },
             "development": {
-              "buildTarget": "mf-template:esbuild:development"
+              "buildTarget": "app-template:build:development"
             }
           },
           "defaultConfiguration": "development",
           "options": {
-            "port": 4250,
-            "headers": {
-              "Access-Control-Allow-Origin": "*"
-            }
+            "port": 4200
           }
-        },
-        "build-test": {
-          "builder": "@angular/build:application",
-          "options": {
-            "outputPath": "dist-test",
-            "index": false,
-            "browser": "src/main.ts",
-            "tsConfig": "tsconfig.app.json",
-            "inlineStyleLanguage": "scss",
-            "allowedCommonJsDependencies": ["encrypt-storage", "pubsub-js"],
-            "styles": ["src/styles.scss"]
-          },
-          "configurations": {
-            "development": {
-              "optimization": false,
-              "sourceMap": true
-            }
-          },
-          "defaultConfiguration": "development"
         },
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "buildTarget": "mf-template:build-test:development",
+            "buildTarget": "app-template:build:development",
             "tsConfig": "tsconfig.spec.json"
           }
         }

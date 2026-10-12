@@ -22,11 +22,11 @@ describe('StorageService', () => {
     expect(localStorage.getItem(StorageEnum.ACCESS_TOKEN)).toBeNull();
   });
 
-  it('reads a token written by the host with the same SECRET_KEY', () => {
-    const host = new EncryptStorageNoble(environment.secretKey);
-    host.setItem(host.hash('ACCESS_TOKEN'), 'host-token');
+  it('reads a value written by another encrypt-storage instance with the same SECRET_KEY', () => {
+    const other = new EncryptStorageNoble(environment.secretKey);
+    other.setItem(other.hash('ACCESS_TOKEN'), 'other-token');
 
-    expect(service.getLocalStorage(StorageEnum.ACCESS_TOKEN)).toBe('host-token');
+    expect(service.getLocalStorage(StorageEnum.ACCESS_TOKEN)).toBe('other-token');
   });
 
   it('returns undefined for a missing key', () => {

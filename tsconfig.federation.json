@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.app.json",
-  "files": [
-    "src/app/modules/template/template.routes.ts"
-  ],
-  "include": [
-    "src/**/*.d.ts"
-  ]
-}

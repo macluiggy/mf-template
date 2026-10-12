@@ -3,16 +3,9 @@ import type { EnvironmentProviders } from '@angular/core';
 import { authInterceptor } from '../interceptors/auth.interceptor';
 
 /**
- * The single HttpClient configuration httpof this MF.
- *
- * Register it in BOTH places:
- *   - `app.config.ts`, for standalone development (`bun run start`);
- *   - the `providers` of the root route of every exposed `Routes` array, so the
- *     interceptors also apply when the host mounts the remote (the host never
- *     runs this app's `app.config.ts`).
- *
- * Add new functional interceptors to the list below, never to a single place.
+ * The single HttpClient configuration of this application, registered once in
+ * `app.config.ts`. Add new functional interceptors to the list below.
  */
-export function provideMfHttpClient(): EnvironmentProviders {
+export function provideAppHttpClient(): EnvironmentProviders {
   return provideHttpClient(withInterceptors([authInterceptor]));
 }

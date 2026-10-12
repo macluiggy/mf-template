@@ -4,10 +4,10 @@ import { environment } from '../../../environments/environment';
 import type { StorageEnum } from '../enums/storage.enum';
 
 /**
- * Same engine and key derivation as the host and frontcore: the key name is
- * `hash(name)` and the value is AES-GCM encrypted, both with SECRET_KEY.
- * If SECRET_KEY differs from the host, every read silently returns undefined
- * (the hashed names never match) — keep it identical in every environment.
+ * Encrypted localStorage: the key name is `hash(name)` and the value is AES-GCM
+ * encrypted, both with SECRET_KEY. Changing SECRET_KEY makes previously stored
+ * values unreadable (reads return undefined), which logs the user out.
+ * This is obfuscation, not a security boundary: SECRET_KEY ships in the bundle.
  */
 const encryptStorage = new EncryptStorageNoble(environment.secretKey);
 

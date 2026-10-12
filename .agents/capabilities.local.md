@@ -1,8 +1,9 @@
-# Fork-only capabilities
+# Project-only capabilities
 
-This file is **only for forks** — it is never edited in `front-template`. Extend the capability map
-of [`AGENTS.md`](../AGENTS.md) here with what exists only in your fork, using the same row format.
-On a merge from `front-template` this file always keeps the fork's version.
+Extend the capability map of [`AGENTS.md`](../AGENTS.md) here with what exists only in a project
+created from this template, using the same row format. Keeping project rows here (instead of in
+`AGENTS.md`) keeps merges from this template conflict-free: on a merge this file always keeps the
+project's version.
 
 <!-- capability-map:start -->
 | If you need… | Already exists | Entry point | Read |

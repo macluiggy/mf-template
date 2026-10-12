@@ -10,7 +10,7 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('renders a router outlet for the standalone-dev shell', () => {
+  it('renders a router outlet for the application shell', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;

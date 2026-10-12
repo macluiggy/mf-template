@@ -25,14 +25,13 @@ describe('authInterceptor', () => {
 
   afterEach(() => controller.verify());
 
-  it('adds the Bearer token stored by the host and the device info header', () => {
+  it('adds the stored access token as a Bearer header', () => {
     storage.saveLocalStorage(StorageEnum.ACCESS_TOKEN, 'abc');
 
     http.get('/api/resource').subscribe();
     const req = controller.expectOne('/api/resource');
 
     expect(req.request.headers.get('Authorization')).toBe('Bearer abc');
-    expect(req.request.headers.get('x-device-info')).toContain('userAgent');
     req.flush({});
   });
 
@@ -43,7 +42,16 @@ describe('authInterceptor', () => {
     const req = controller.expectOne('/api/resource');
 
     expect(req.request.headers.has('Authorization')).toBe(false);
-    expect(req.request.headers.has('x-device-info')).toBe(true);
+    req.flush({});
+  });
+
+  it('does not add custom headers beyond Authorization', () => {
+    storage.saveLocalStorage(StorageEnum.ACCESS_TOKEN, 'abc');
+
+    http.get('/api/resource').subscribe();
+    const req = controller.expectOne('/api/resource');
+
+    expect(req.request.headers.keys()).toEqual(['Authorization']);
     req.flush({});
   });
 

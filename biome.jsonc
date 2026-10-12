@@ -20,8 +20,6 @@
       "!!**/.vscode",
       "!!**/odd",
       "!!**/src/environments",
-      // Rewritten by scripts/generate-module.js (JSON.stringify layout).
-      "!!**/tsconfig.federation.json",
       "!!**/*.html",
       "!!**/*.scss"
     ],
