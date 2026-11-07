@@ -42,6 +42,19 @@ live in [`.agents/`](.agents/); open the relevant doc before touching that area.
   plumbing, test setup — and would help every new front/MF, propose upstreaming it to
   front-template. Propose, never apply it there on your own; see the
   [merge skill](.agents/skills/merge-fork-from-front-template/SKILL.md).
+- ⚠️ **If two or more repos implement the same functionality, it belongs in front-template — detect
+  it WITHOUT being asked.** Whenever you work in a front (implementing, reviewing, or merging
+  front-template) and see that another front already solves the same thing (an interceptor, a
+  guard, a storage/permission helper, a pipe, a locale setup, test or build tooling), say so in
+  your answer and propose moving it to front-template as one shared capability: a single
+  implementation with its capability-map row, which forks receive on their next sync and which
+  replaces their copies. Shared UI goes to `@neocore/lib-components`, not here. Build it like a
+  lego piece: **high cohesion** (one capability, one responsibility, everything it needs in its
+  own folder) and **loose coupling** (consumed only through its public entry point — a
+  `provideX()` function, a service, a token — never through its internals, with safe defaults), so
+  it can be added or removed without breaking the rest. Code used by a single front stays in that
+  fork (`.agents/capabilities.local.md`). Upstreaming is a change in front-template on its own
+  branch: propose it, never apply it there on your own.
 
 ## Capability map
 
