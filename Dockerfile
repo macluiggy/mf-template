@@ -9,7 +9,6 @@ ARG DIST_STAGE=build
 # with `--build-arg BUN_VERSION=...`; this default must match the file
 # (pinned by scripts/tool-versions.test.js).
 ARG BUN_VERSION=1.4.4
-
 # ==========================================================================
 # 1) DEPS — local/standalone builds only (CI installs in `install_deps`).
 #    Private @neocore packages: pass a .npmrc as a BuildKit secret, e.g.
@@ -42,7 +41,7 @@ FROM ${DIST_STAGE} AS dist_src
 # ==========================================================================
 # 3) RUNTIME — nginx, non-root. The only stage CI builds (--target runtime).
 # ==========================================================================
-FROM nginx:1.31.1-alpine-slim AS runtime
+FROM nginx:1.31.8-alpine-slim AS runtime
 
 ARG VERSION=0.1.0
 LABEL maintainer="Neocore Team"
