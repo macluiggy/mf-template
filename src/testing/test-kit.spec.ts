@@ -4,51 +4,96 @@ import { TestBed } from '@angular/core/testing';
 
 import { PubSubService } from '../app/shared/services/pubsub.service';
 import { StorageService } from '../app/shared/services/storage.service';
-import {
-  provideHttpTesting,
-  providePubSubMock,
-  provideStorageMock,
-} from './index';
+import { provideHttpTesting } from './http.testing';
+import { createPubSubMock, providePubSubMock } from './pubsub.mock';
+import { createStorageMock, provideStorageMock } from './storage.mock';
 
 describe('test kit', () => {
-  it('storage double round-trips and deletes values', () => {
-    const { mock, providers } = provideStorageMock({ ACCESS_TOKEN: 'seed' });
-    TestBed.configureTestingModule({ providers });
-    const storage = TestBed.inject(StorageService);
+  describe('createStorageMock', () => {
+    it('round-trips a value through the in-memory store', () => {
+      const storage = createStorageMock();
 
-    expect(storage.getLocalStorage('ACCESS_TOKEN')).toBe('seed');
-    storage.saveLocalStorage('USER_SESSION', 'session');
-    expect(storage.getLocalStorage('USER_SESSION')).toBe('session');
-    storage.deleteKeyStorage('USER_SESSION');
-    expect(storage.getLocalStorage('USER_SESSION')).toBeUndefined();
-    expect(mock.saveLocalStorage).toHaveBeenCalledWith(
-      'USER_SESSION',
-      'session',
-    );
+      storage.saveLocalStorage('ACCESS_TOKEN', 'token-123');
+
+      expect(storage.getLocalStorage('ACCESS_TOKEN')).toBe('token-123');
+    });
+
+    it('starts with the values it was seeded with', () => {
+      const storage = createStorageMock({ ACCESS_TOKEN: 'seeded' });
+
+      expect(storage.getLocalStorage('ACCESS_TOKEN')).toBe('seeded');
+    });
+
+    it('returns undefined for a missing key', () => {
+      const storage = createStorageMock();
+
+      expect(storage.getLocalStorage('USER_SESSION')).toBeUndefined();
+    });
+
+    it('removes a key', () => {
+      const storage = createStorageMock({ ACCESS_TOKEN: 'token-123' });
+
+      storage.deleteKeyStorage('ACCESS_TOKEN');
+
+      expect(storage.getLocalStorage('ACCESS_TOKEN')).toBeUndefined();
+      expect(storage.deleteKeyStorage).toHaveBeenCalledWith('ACCESS_TOKEN');
+    });
   });
 
-  it('pubsub mock records the calls a component makes', () => {
-    const { mock, providers } = providePubSubMock();
-    TestBed.configureTestingModule({ providers });
+  describe('provideStorageMock', () => {
+    it('replaces the storage service in the TestBed', () => {
+      const { mock, providers } = provideStorageMock({
+        ACCESS_TOKEN: 'token-123',
+      });
 
-    TestBed.inject(PubSubService).loading(true);
-    TestBed.inject(PubSubService).error('boom');
+      TestBed.configureTestingModule({ providers });
+      const service = TestBed.inject(StorageService);
 
-    expect(mock.loading).toHaveBeenCalledWith(true);
-    expect(mock.error).toHaveBeenCalledWith('boom');
+      expect(service.getLocalStorage('ACCESS_TOKEN')).toBe('token-123');
+      expect(mock.saveLocalStorage).not.toHaveBeenCalled();
+    });
   });
 
-  it('provideHttpTesting lets a request be flushed', () => {
-    TestBed.configureTestingModule({ providers: [provideHttpTesting()] });
-    const http = TestBed.inject(HttpTestingController);
-    let body: unknown;
+  describe('createPubSubMock', () => {
+    it('records what the page published to the host', () => {
+      const pubsub = createPubSubMock();
 
-    TestBed.inject(HttpClient)
-      .get('/api/ping')
-      .subscribe((value) => (body = value));
-    http.expectOne('/api/ping').flush({ ok: true });
+      pubsub.loading(true);
+      pubsub.error('boom');
 
-    expect(body).toEqual({ ok: true });
-    http.verify();
+      expect(pubsub.loading).toHaveBeenCalledWith(true);
+      expect(pubsub.error).toHaveBeenCalledWith('boom');
+    });
+  });
+
+  describe('providePubSubMock', () => {
+    it('replaces the pubsub service in the TestBed', () => {
+      const { mock, providers } = providePubSubMock();
+
+      TestBed.configureTestingModule({ providers });
+      const service = TestBed.inject(PubSubService);
+
+      service.loading(true);
+
+      expect(mock.loading).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('provideHttpTesting', () => {
+    it('lets a service request be flushed with the HttpTestingController', () => {
+      TestBed.configureTestingModule({ providers: provideHttpTesting() });
+      const http = TestBed.inject(HttpClient);
+      const controller = TestBed.inject(HttpTestingController);
+      let result: unknown;
+
+      http.get('/api/users').subscribe((res) => (result = res));
+
+      const request = controller.expectOne('/api/users');
+      expect(request.request.method).toBe('GET');
+      request.flush({ id: 1 });
+
+      expect(result).toEqual({ id: 1 });
+      controller.verify();
+    });
   });
 });

@@ -21,6 +21,28 @@
 - Interceptors: `provideHttpClient(withInterceptors([fn]))` + `HttpTestingController`.
 - Tests must be deterministic and offline: never hit `API_URL`.
 
+## Test kit
+
+`src/testing/` ships the doubles for the shared services, so a spec never
+hand-rolls them. Import from `src/testing` (never from the individual files):
+
+| Helper                                     | Use it when…                                                          |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| `createPubSubMock()` / `providePubSubMock()` | The spec asserts what the page published to the host (loader, toasts) |
+| `createStorageMock(initial?)` / `provideStorageMock(initial?)` | The spec needs the encrypted localStorage (token, session) |
+| `provideHttpTesting()`                     | The spec flushes the requests of a service with `HttpTestingController` |
+
+```ts
+import { provideHttpTesting, providePubSubMock } from '../../testing';
+
+const { mock: pubsub, providers } = providePubSubMock();
+
+TestBed.configureTestingModule({ providers: [provideHttpTesting(), ...providers] });
+```
+
+The kit is test-only: `tsconfig.app.json` excludes `src/testing/**`, so it
+never reaches the app bundle.
+
 The `test` architect target builds through `build-test` (plain `@angular/build:application`, no
 federation, no `es-module-shims`) because the federation builder cannot be used by `unit-test`.
 
