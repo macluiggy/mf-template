@@ -43,7 +43,8 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Package managers: bun.lock is the only lockfile of this repo
+# Package managers: no lockfile is versioned; bun install regenerates bun.lock
+bun.lock
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
