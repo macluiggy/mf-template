@@ -29,3 +29,19 @@ builder does not own, such as inlining `@neocore/lib-components`. It is CommonJS
 `package.json` has no `"type": "module"`. Forks with zone.js and `fakeAsync` specs add
 `zone.js/plugins/vitest-patch` to the `build-test` polyfills; migrating a Karma fork is covered in
 the merge skill's `references/vitest-migration.md`.
+
+## Test kit
+
+`src/testing/` holds test-only doubles (excluded from `tsconfig.app.json`, so they never reach the
+bundle). Import them from `src/testing` instead of writing a mock per spec:
+
+| Helper | Use it when |
+|---|---|
+| `providePubSubMock()` → `{ mock, providers }` | The code under test talks to the host (loader, toasts); assert on `mock.loading`, `mock.error`… |
+| `provideStorageMock(initial?)` → `{ mock, providers }` | The code reads/writes encrypted localStorage; seed it with `initial` (no `SECRET_KEY` needed) |
+| `provideHttpTesting()` | A service spec that makes HTTP calls; pair it with `TestBed.inject(HttpTestingController)` |
+
+`template-list.page.spec.ts` is the reference: the generator copies it into every new module.
+If a fork needs another shared double, add it here (one file, exported from `index.ts`) instead of
+in the fork.
+
