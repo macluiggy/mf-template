@@ -7,10 +7,11 @@ const config: import('vitest/config').ViteUserConfig = {
   test: {
     server: {
       deps: {
-        // @neocore/lib-components (used by most forks) ships ESM that imports
-        // `dayjs/locale/es` without an extension; Node's strict ESM loader
-        // rejects that, so let Vite transform it.
-        inline: ['@neocore/lib-components'],
+        // A fork that adds an ESM dependency importing extensionless paths
+        // (e.g. `dayjs/locale/es`) must inline it here: Node's strict ESM
+        // loader rejects those, so let Vite transform them.
+        // inline: ['<the-package>'],
+        inline: [],
       },
     },
   },

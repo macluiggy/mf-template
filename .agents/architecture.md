@@ -11,6 +11,7 @@ src/
 └── app/
     ├── app.ts / app.config.ts / app.routes.ts   standalone-dev shell (never runs in the host)
     ├── core/                                     ports + safe local defaults (no host code)
+    │   ├── app-locale.ts          provideAppLocale() + ES_EC_LOCALE preset (es-EC + USD)
     │   ├── auth-token.ts          AUTH_TOKEN_PROVIDER
     │   ├── key-value-storage.ts   KeyValueStorage + LocalStorageKeyValueStorage
     │   ├── notifier.ts            Notifier + ConsoleNotifier
@@ -23,7 +24,6 @@ src/
     │   ├── helpers/        isUsableBearerToken, toUserMessage
     │   ├── interceptors/   generic authInterceptor (Bearer from AUTH_TOKEN_PROVIDER)
     │   ├── interfaces/     response envelopes
-    │   ├── locale/         provideNeocoreLocale() (es-EC + USD)
     │   ├── providers/      provideAppHttpClient() + APP_HTTP_INTERCEPTORS
     │   └── services/       LoadingTrackerService
     └── modules/

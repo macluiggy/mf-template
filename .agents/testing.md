@@ -49,7 +49,8 @@ The `test` architect target builds through `build-test` (plain `@angular/build:a
 federation, no `es-module-shims`) because the federation builder cannot be used by `unit-test`.
 
 `vitest.config.ts` (the `runnerConfig` of the `test` target) holds the few options the Angular
-builder does not own, such as inlining `@neocore/lib-components`. It is CommonJS on purpose:
+builder does not own, such as inlining an ESM dependency that imports extensionless paths (a fork
+that adds one lists it in `server.deps.inline`). It is CommonJS on purpose:
 `package.json` has no `"type": "module"`. Forks with zone.js and `fakeAsync` specs add
 `zone.js/plugins/vitest-patch` to the `build-test` polyfills; migrating a Karma fork is covered in
 the merge skill's `references/vitest-migration.md`.

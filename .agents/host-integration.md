@@ -91,16 +91,19 @@ The host (`frontcontainer`) provides no `LOCALE_ID`: the pipes of a remote mount
 would default to `en-US`. The remote fixes it itself, because the host never runs the remote's
 `app.config.ts` (same rule as the interceptors above).
 
-- `app.config.ts` calls `provideNeocoreLocale()` for standalone dev.
+- `app.config.ts` calls `provideAppLocale()` for standalone dev.
 - Every exposed `Routes` array provides it in the root route's `providers`, so a hosted remote
   formats dates, numbers and currency in Spanish (Ecuador) with USD as the default currency.
 
-`provideNeocoreLocale()` registers Angular's locale data and provides `LOCALE_ID` (`es-EC`) and
-`DEFAULT_CURRENCY_CODE` (`USD`).
+`provideAppLocale()` (`src/app/core/app-locale.ts`) registers Angular's locale data and provides
+`LOCALE_ID` (`es-EC`) and `DEFAULT_CURRENCY_CODE` (`USD`). Without options it keeps that behavior:
+the values come from the `ES_EC_LOCALE` preset. Another locale is one call away —
+`provideAppLocale({ currency: 'EUR', id: 'en-US' })` — and `provideNeocoreLocale()` is kept as a
+deprecated alias of `provideAppLocale()` so the forks that call it do not break.
 
 The locale data is imported with a **relative** path from `node_modules`
-(`../../../../node_modules/@angular/common/locales/es`), never with the bare specifier
-`@angular/common/locales/*`:
+(`../../../node_modules/@angular/common/locales/es`, relative to `src/app/core/`), never with the
+bare specifier `@angular/common/locales/*`:
 
 - `@angular/common` is a shared singleton of the federation, so the bare specifier is an external
   of that package and is left to the import map.

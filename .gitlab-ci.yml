@@ -329,8 +329,16 @@ build_image:
       IMAGE_COMMIT="$CI_REGISTRY_IMAGE:${VERSION}-${ENV_CODE}-${CI_COMMIT_SHORT_SHA}"
       IMAGE_CHANNEL="$CI_REGISTRY_IMAGE:${CHANNEL}"
       # DIST_STAGE=prebuilt reuses dist/ from build_app instead of rebuilding.
+      # CORS is only needed by a federated remote (the host fetches
+      # remoteEntry.json cross-origin), so the image ships it only when the
+      # repo builds a federation manifest (same condition as build_app).
+      FEDERATION_ARG=""
+      if [ -f federation.config.mjs ]; then
+        FEDERATION_ARG="--build-arg FEDERATION=true"
+      fi
       docker build --target runtime \
         --build-arg DIST_STAGE=prebuilt \
+        $FEDERATION_ARG \
         --build-arg BUN_VERSION="$BUN_VERSION" \
         --build-arg VERSION="$VERSION" \
         -t "$IMAGE_COMMIT" -t "$IMAGE_CHANNEL" .
