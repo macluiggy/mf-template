@@ -122,6 +122,8 @@ node scaffold/generate.js --service=mf-template --target=. --force   # regenerat
 - Do not hardcode Node/Bun versions: `.node-version` and `.bun-version` are the source of truth
   (CI `resolve_versions`, Dockerfile `ARG BUN_VERSION`, `package.json`), pinned by
   `scripts/tool-versions.test.js`.
+- Do not turn off `strict` (`tsconfig.json`) or `strictTemplates` (`angularCompilerOptions`): every
+  fork already compiles with both, and a new MF must not start weaker than them.
 - No `^`/`~` ranges on `@angular/*`, `@angular/build`, `@angular/cli`, `@angular-architects/native-federation`.
 - No `.npmrc` with tokens in the repo (CI generates it with `CI_JOB_TOKEN`).
 - No webpack/Module Federation config: this is Native Federation (`federation.config.mjs`).
