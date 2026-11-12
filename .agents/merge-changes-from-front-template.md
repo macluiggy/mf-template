@@ -1,5 +1,10 @@
 # Sync a fork with `front-template`
 
+> **NEOCORE forks only.** This workflow merges the template's history into a fork that cloned it.
+> A project created with `scripts/template-sync.js` (one snapshot commit) never merges the template's
+> commits — it takes updates with `node scripts/template-sync.js` (see
+> [`projects-from-template.md`](projects-from-template.md)).
+
 Forks (`mf-template`, new MFs) are independent repos whose history may not share a root with this
 one. Changes flow with a real `git merge`, never by copying files by hand.
 

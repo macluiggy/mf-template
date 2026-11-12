@@ -23,14 +23,14 @@
 
 ## Test kit
 
-`src/testing/` ships the doubles for the shared services, so a spec never
-hand-rolls them. Import from `src/testing` (never from the individual files):
+`src/testing/` ships the doubles for the shared services, so a spec never hand-rolls them. Import
+from `src/testing` (never from the individual files):
 
 | Helper                                     | Use it when…                                                          |
 | ------------------------------------------ | --------------------------------------------------------------------- |
 | `createNotifierMock()` / `provideNotifierMock()` | The spec asserts the loader/toasts the code asked for           |
 | `createStorageMock(initial?)` / `provideStorageMock(initial?)` | The spec needs the `KeyValueStorage` port (token, session) |
-| `createPubSubMock()` / `providePubSubMock()` | The spec tests the NEOCORE integration (what it published to the host) |
+| `createPubSubMock()` / `providePubSubMock()` | The spec tests the NEOCORE integration (NEOCORE preset only: what it published to the host) |
 | `provideHttpTesting()`                     | The spec flushes the requests of a service with `HttpTestingController` |
 
 ```ts
@@ -45,6 +45,10 @@ The kit is test-only: `tsconfig.app.json` excludes `src/testing/**` and the inte
 folders (the PubSub mock lives next to the NEOCORE adapter but is re-exported from
 `src/testing/index.ts`), so none of it reaches the app bundle.
 
+`template-list.page.spec.ts` is the reference: the generator copies it into every new module.
+If a fork needs another shared double, add it here (one file, exported from `index.ts`) instead of
+in the fork.
+
 The `test` architect target builds through `build-test` (plain `@angular/build:application`, no
 federation, no `es-module-shims`) because the federation builder cannot be used by `unit-test`.
 
@@ -54,20 +58,3 @@ that adds one lists it in `server.deps.inline`). It is CommonJS on purpose:
 `package.json` has no `"type": "module"`. Forks with zone.js and `fakeAsync` specs add
 `zone.js/plugins/vitest-patch` to the `build-test` polyfills; migrating a Karma fork is covered in
 the merge skill's `references/vitest-migration.md`.
-
-## Test kit
-
-`src/testing/` holds test-only doubles (excluded from `tsconfig.app.json`, so they never reach the
-bundle). Import them from `src/testing` instead of writing a mock per spec:
-
-| Helper | Use it when |
-|---|---|
-| `provideNotifierMock()` → `{ mock, providers }` | The code under test reports loader/toasts; assert on `mock.loading`, `mock.error`… |
-| `provideStorageMock(initial?)` → `{ mock, providers }` | The code reads/writes the `KeyValueStorage` port; seed it with `initial` (no `SECRET_KEY` needed) |
-| `providePubSubMock()` → `{ mock, providers }` | The spec tests the NEOCORE PubSub adapter (re-exported from the integration folder) |
-| `provideHttpTesting()` | A service spec that makes HTTP calls; pair it with `TestBed.inject(HttpTestingController)` |
-
-`template-list.page.spec.ts` is the reference: the generator copies it into every new module.
-If a fork needs another shared double, add it here (one file, exported from `index.ts`) instead of
-in the fork.
-

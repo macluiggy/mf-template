@@ -1,6 +1,17 @@
-# Host integration
+# NEOCORE host integration (optional preset)
 
-How the host `frontcontainer` loads this remote, and the contract both sides must keep.
+How the NEOCORE host `frontcontainer` loads this app as a Native Federation remote, and the
+contract both sides must keep.
+
+> **This document is a preset.** Everything in it applies ONLY when the app is deployed as a remote
+> of the NEOCORE host. A plain SPA needs none of it: without `provideNeocoreHost()` the app runs
+> on the core ports (console notifier, plain localStorage, no token, allow-all permissions).
+>
+> Every NEOCORE-shaped piece — PubSub, the encrypted storage with its `SECRET_KEY`, `x-device-info`,
+> `x-api-key` and the `ms-core` paths — lives in ONE folder:
+> [`src/app/integrations/neocore/`](../src/app/integrations/neocore/README.md). `provideNeocoreHost()`
+> binds all of it over the safe defaults of `provideAppCore()`; deleting that folder and its calls
+> removes the preset.
 
 ## How the host loads a remote
 
@@ -58,23 +69,14 @@ exposes: {
 - `bun run generate:module -- --name=<name> --expose` does both edits.
 - Verify after `bun run build:federation`: `dist/browser/remoteEntry.json` → `exposes[].key`.
 
-## NEOCORE integration
-
-Everything that only makes sense against the NEOCORE host — PubSub, the encrypted storage with its
-`SECRET_KEY`, `x-device-info`, `x-api-key` and the `ms-core` paths — lives in ONE folder:
-[`src/app/integrations/neocore/`](../src/app/integrations/neocore/README.md). `provideNeocoreHost()`
-binds all of it over the safe defaults of `provideAppCore()`. The rest of this document describes
-that contract; without the integration the app runs on the core ports (console notifier, plain
-localStorage, no token, allow-all permissions).
-
 ## Interceptors
 
 The host never executes this app's `app.config.ts`; it only imports the exposed file. The template
-follows the same rule as frontcore:
+follows the same rule as the other NEOCORE remotes:
 
 - **Hosted mode:** exposed `Routes` do **not** provide an HttpClient. Requests go through the host's
   HttpClient and its interceptors (`AuthInterceptor`, `ErrorHandlerInterceptor`, `loaderInterceptor`
-  in `frontcontainer/src/app/app.config.ts`), so the host shows the loader and error toasts.
+  in the host's `app.config.ts`), so the host shows the loader and error toasts.
 - **Standalone dev (`bun run start`):** `app.config.ts` registers `provideAppHttpClient()`
   (`src/app/shared/providers/http.providers.ts`). The generic `authInterceptor` adds
   `Authorization: Bearer <token>` from the `AUTH_TOKEN_PROVIDER` port (default: no token).
@@ -87,9 +89,9 @@ follows the same rule as frontcore:
 
 ## Locale
 
-The host (`frontcontainer`) provides no `LOCALE_ID`: the pipes of a remote mounted by the host
-would default to `en-US`. The remote fixes it itself, because the host never runs the remote's
-`app.config.ts` (same rule as the interceptors above).
+The host provides no `LOCALE_ID`: the pipes of a remote mounted by the host would default to
+`en-US`. The remote fixes it itself, because the host never runs the remote's `app.config.ts` (same
+rule as the interceptors above).
 
 - `app.config.ts` calls `provideAppLocale()` for standalone dev.
 - Every exposed `Routes` array provides it in the root route's `providers`, so a hosted remote
@@ -111,12 +113,12 @@ bare specifier `@angular/common/locales/*`:
   `@angular/common/http` included, to the remote: the remote loses the host's HttpClient and its
   interceptors.
 - The locale file is self-contained data, so it is bundled into the remote instead. Same approach
-  as `frontbills` and `frontvirtualofficebroker`.
+  as the other NEOCORE remotes.
 
 ## PubSub contract
 
-The host subscribes to these topics (`frontcontainer/src/app/app.component.ts`). Generic code never
-touches them: it calls the `Notifier` port, and `provideNeocoreHost()` binds `PubSubNotifier` (which
+The host subscribes to these topics (in the host's `app.component.ts`). Generic code never touches
+them: it calls the `Notifier` port, and `provideNeocoreHost()` binds `PubSubNotifier` (which
 publishes these topics through `PubSubService` / `PubSubTopic`, never raw strings). Importing PubSub
 outside `src/app/integrations/neocore/` is a bug.
 
@@ -157,28 +159,28 @@ the forks (see [`merge-changes-from-front-template.md`](merge-changes-from-front
 
 ## Ports
 
-Local dev ports already in use: container 4200, core/auth 4201, virtual office broker 4211. This
-template serves on **4250**; a fork picks a free port in `angular.json` (`serve.options.port`).
+The dev server of this template serves on **4250**; a fork picks a free port in `angular.json`
+(`serve.options.port`).
 
 ## Hot reload in the host
 
-Angular's dev-server HMR only replaces stylesheets. When this remote is loaded by `frontcontainer`,
-template/view edits (the template, `@if`/`@for`/`@defer` content, component styles) are applied by
-the **host's** `watchLocalRemoteRebuilds()`: it listens to the remote's Native Federation
+Angular's dev-server HMR only replaces stylesheets. When this remote is loaded by the host, template
+and view edits (the template, `@if`/`@for`/`@defer` content, component styles) are applied by the
+**host's** `watchLocalRemoteRebuilds()`: it listens to the remote's Native Federation
 `buildNotificationsEndpoint` and hot-swaps the live component with `ɵɵreplaceMetadata`. The component
 instance and its state survive and no HTTP call is repeated. Edits to logic, services or any
 non-component code fall back to a full page reload by design.
 
 Requirements: the remote runs from a `localhost` dev server and the host manifest row points at its
-`remoteEntry.json` (see `frontcontainer/docs/local-development.md`). Restart `ng serve` after changing
+`remoteEntry.json` (see the host's local-development docs). Restart `ng serve` after changing
 `angular.json` polyfills. Measured on this template: ~0.8 s from file save to hot patch.
 
 ## Dev server
 
 `bun run start` is `load-env` + `ng serve` (plain standalone SPA). To serve the remote to the host,
-use `bun run start:federation` (`load-env` + `ng run <project>:serve-federation`), the same as
-frontcore and frontzohoadmin: no wrapper script. Startup and rebuild time grow with the size of
-the remote (exposes, components), not with extra tooling.
+use `bun run start:federation` (`load-env` + `ng run <project>:serve-federation`), the same as the
+other NEOCORE remotes: no wrapper script. Startup and rebuild time grow with the size of the remote
+(exposes, components), not with extra tooling.
 
 - HMR needs no flag: the dev server enables it by default (`hmr` defaults to `liveReload`, which is
   `true`). Template/style edits reach the host through its `watchLocalRemoteRebuilds()` hot-swap.
@@ -186,4 +188,3 @@ the remote (exposes, components), not with extra tooling.
 - `sourceMap: true` in `development` keeps `.ts` breakpoints in the browser.
 - Angular's first rebuild after startup recompiles the whole program (slower in large remotes);
   later rebuilds are incremental.
-

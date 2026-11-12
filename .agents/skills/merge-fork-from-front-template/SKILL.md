@@ -7,6 +7,11 @@ metadata:
   version: '1.0'
 ---
 
+> **NEOCORE forks only.** This skill merges the template's history into a NEOCORE fork that cloned
+> it. A project created with `scripts/template-sync.js` never merges the template's commits: it takes
+> updates with `node scripts/template-sync.js` (see
+> [`../../projects-from-template.md`](../../projects-from-template.md)).
+
 ## Activation Contract
 
 Load when asked to bring front-template's generic/base changes into one of its forks

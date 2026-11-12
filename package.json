@@ -2,7 +2,7 @@
   "name": "mf-template",
   "version": "0.1.0",
   "private": true,
-  "description": "Neocore micro-frontend template (Angular + Native Federation)",
+  "description": "Angular 22 standalone template (plain SPA by default, Native Federation remote as an opt-in preset)",
   "scripts": {
     "ng": "ng",
     "prepare": "node prepare.js",

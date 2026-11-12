@@ -1,6 +1,6 @@
 # `template` module
 
-Reference feature module. Every new feature of a Neocore micro-frontend starts as a copy of
+Reference feature module. Every new feature starts as a copy of
 this folder, made by the generator (this README is not copied):
 
 ```bash
@@ -41,7 +41,8 @@ bun run generate:module -- --name=user-profile --expose   # module + exposed to 
 1. Change the resource/actions in `enums/<name>-action.enum.ts` and the endpoint path in
    `constants/<name>.constants.ts`.
 2. Standalone dev: add the lazy route to `src/app/app.routes.ts` (the generator prints it).
-3. Host: expose it (`--expose`) and register the manifest row in ms-core (see `AGENTS.md`).
+3. Host (optional preset): expose it (`--expose`) and register the manifest row in the host
+   manifest — NEOCORE: ms-core (see `AGENTS.md`).
 
 The generator renames `template`/`Template`/`TEMPLATE_` in file names and contents and keeps Angular
 keywords (`templateUrl`, `template:`, `ng-template`, `TemplateRef`). Identifiers that merely start with

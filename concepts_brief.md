@@ -1,5 +1,10 @@
 # Ready-to-use front-template (standardized micro-frontend base)
 
+> **Historical document — not template guidance.** This is the 2026-11-07 design brief that
+> produced this template inside the NEOCORE fleet (it talks about `core/frontcontainer`,
+> `ms-core` and the other fronts). It is kept for context only: the template's own rules live in
+> [`AGENTS.md`](AGENTS.md) and [`.agents/`](.agents/).
+
 * **Author:** Luiggy Macías
 * **Date:** 2026-11-07
 

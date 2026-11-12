@@ -5,6 +5,6 @@
 # Only install package versions published at least 7 days ago (supply-chain guard).
 minimumReleaseAge = 604800
 # Packages that bypass the 7-day minimum age requirement.
-# A fork that adds an internally published package (e.g. @neocore/*) must add
-# it here: it is released right before the fork needs it.
+# A fork that adds an internally published package (one served by a private
+# registry) must add it here: it is released right before the fork needs it.
 minimumReleaseAgeExcludes = ["encrypt-storage"]

@@ -3,7 +3,7 @@ import {
   withNativeFederation,
 } from '@angular-architects/native-federation/config';
 
-// Remote policy, aligned with the host (frontcontainer) and frontcore:
+// Remote policy, aligned with the host that loads it:
 // the whole Angular/rxjs stack is a strict singleton. The host shares the same
 // packages with the same versions (see package.json pins), so a version drift
 // fails loudly at load time instead of running two Angular runtimes.
@@ -58,8 +58,8 @@ export default withNativeFederation({
     // CommonJS/UMD packages: Native Federation's esbuild-based shared-export
     // analysis cannot read their module shape and falls back to a default-only
     // export, which breaks named imports at runtime (for example
-    // "does not provide an export named 'EncryptStorage'"). Same finding as the
-    // host and frontcore; they are bundled locally instead of shared.
+    // "does not provide an export named 'EncryptStorage'"). They are bundled
+    // locally instead of shared.
     'encrypt-storage',
     'pubsub-js',
     // Polyfills are never shared: each remote bundles its own copy and

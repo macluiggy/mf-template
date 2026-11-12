@@ -18,8 +18,8 @@ src/
     │   ├── permission-checker.ts  PermissionChecker + AllowAllPermissionChecker
     │   └── app-core.providers.ts  provideAppCore()
     ├── integrations/
-    │   └── neocore/              EVERYTHING host-specific, bound by provideNeocoreHost()
-    ├── shared/                   plumbing every MF needs (see capability map)
+    │   └── neocore/              OPTIONAL preset: everything host-specific, bound by provideNeocoreHost()
+    ├── shared/                   plumbing every feature needs (see capability map)
     │   ├── guards/         permissionGuard (PermissionChecker + Notifier)
     │   ├── helpers/        isUsableBearerToken, toUserMessage
     │   ├── interceptors/   generic authInterceptor (Bearer from AUTH_TOKEN_PROVIDER)
@@ -30,9 +30,9 @@ src/
         └── template/       reference feature module (cloned by the generator)
 ```
 
-Dependency direction: `modules` and `shared` depend on `core`; `integrations/neocore` depends on
-both; NOTHING imports `integrations/` from `core`, `shared` or `modules`. Removing the integration is
-deleting that folder and the `provideNeocoreHost()` calls.
+Dependency direction: `modules` and `shared` depend on `core`; an integration (`integrations/<host>/`)
+depends on both; NOTHING imports `integrations/` from `core`, `shared` or `modules`. Removing an
+integration is deleting that folder and its `provideX()` calls.
 
 Screaming layout: each folder under `modules/` is a business feature, and everything the feature
 needs lives inside it. `shared/` only holds what every feature needs; feature code never imports
@@ -70,14 +70,16 @@ modules/<feature>/
 
 ### Permissions and gateway
 
-The app asks the `PermissionChecker` port (allow-all by default; `provideNeocoreHost()` reads the
-host's `ROLE_PERMISSION`/`PERMISSION` payloads). Resource and actions live in the feature's
-`enums/*-action.enum.ts` and are passed to `permissionGuard(resource, action)`.
+The app asks the `PermissionChecker` port (allow-all by default). Resource and actions live in the
+feature's `enums/*-action.enum.ts` and are passed to `permissionGuard(resource, action)`.
 
-Only with `provideNeocoreHost()`: every request to the NEOCORE gateway carries
-`x-api-key: <resource>:<action>` built with `buildPermissionHeaders()`, and the microservice path
-prefix comes from `MsPrefixEnum`. Both live in `src/app/integrations/neocore/http/`; generic code
-builds its URL from `environment.apiUrl` plus a module-local path constant.
+#### NEOCORE preset (optional)
+
+With `provideNeocoreHost()` the checker reads the host's `ROLE_PERMISSION`/`PERMISSION` payloads,
+every request to the NEOCORE gateway carries `x-api-key: <resource>:<action>` built with
+`buildPermissionHeaders()`, and the microservice path prefix comes from `MsPrefixEnum`. All of it
+lives in `src/app/integrations/neocore/http/`; generic code builds its URL from `environment.apiUrl`
+plus a module-local path constant.
 
 ## Creating a module
 

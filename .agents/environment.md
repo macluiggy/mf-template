@@ -6,7 +6,8 @@ gitignored**; `start`, `build`, `watch` and `test` regenerate them first, so a f
 with no manual step.
 
 Only `API_URL` is required: the template is a plain Angular app. Everything NEOCORE-shaped
-(`SECRET_KEY`, `ENTITY_ROOT`, the remote config call) is opt-in.
+(`SECRET_KEY`, `ENTITY_ROOT`, the remote config call) is opt-in — see
+[the NEOCORE preset](#the-neocore-preset).
 
 ## Sources and precedence
 
@@ -15,7 +16,7 @@ Only `API_URL` is required: the template is a plain Angular app. Everything NEOC
    overwritten — new defaults go to `.env.ignore` for diffing).
 3. `.env.example`, only when `.env` does not exist (prints a warning).
 4. Optional remote config: `GET $ENV_REMOTE_URL` — **opt-in**, the call only happens when
-   `ENV_REMOTE_URL` is set (NEOCORE: `${API_URL}/ms-core/parameter/env`). Extra keys are added as
+   `ENV_REMOTE_URL` is set. Extra keys are added as
    optional properties; the base keys (`production`, `apiUrl`, `secretKey`, `entityRoot`) are never
    overwritten. Best-effort: on failure/timeout the build continues with the values above and prints
    a warning. `SKIP_ENV_FETCH=1` is a hard off switch, even when `ENV_REMOTE_URL` is set (tests do).
@@ -44,7 +45,10 @@ plain app: no secret, no entity root, no remote config call. The generated inter
 `secretKey` and `entityRoot` as optional properties, so the type is the same with or without the
 preset; the values are written only when the variables are set.
 
-## Why SECRET_KEY must match the host (only with `provideNeocoreHost()`)
+The NEOCORE deployment points `ENV_REMOTE_URL` at its parameter service
+(`${API_URL}/ms-core/parameter/env`); any project may point it at its own configuration document.
+
+## Why SECRET_KEY must match the host (NEOCORE preset only)
 
 The host stores the access token with `encrypt-storage` (`EncryptStorageNoble`): the key **name** is
 `hash('ACCESS_TOKEN')` and the value is AES-GCM encrypted, both derived from `SECRET_KEY`. The remote
@@ -58,6 +62,7 @@ value is checked when the encrypted client is created.
 
 ## Adding a variable
 
-1. Add it to `.env.example` (documented) and to the CI `build_app` `.env` heredoc.
+1. Add it to `.env.example` (documented) and, when the repo uses the NEOCORE GitLab CI preset, to
+   the CI `build_app` `.env` heredoc.
 2. Add it to `readBaseConfig()` in `load-env.js` and to the generated interface.
 3. Never put secrets other than `SECRET_KEY` in the bundle: everything in `environment.ts` is public.

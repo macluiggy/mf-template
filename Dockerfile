@@ -11,7 +11,7 @@ ARG DIST_STAGE=build
 ARG BUN_VERSION=1.4.4
 # ==========================================================================
 # 1) DEPS — local/standalone builds only (CI installs in `install_deps`).
-#    Private @neocore packages: pass a .npmrc as a BuildKit secret, e.g.
+#    Private registry packages: pass a .npmrc as a BuildKit secret, e.g.
 #    docker build --secret id=npmrc,src=.npmrc .   (never COPY it).
 # ==========================================================================
 FROM oven/bun:${BUN_VERSION}-slim AS deps
@@ -49,8 +49,8 @@ ARG VERSION=0.1.0
 # (the host fetches remoteEntry.json and the chunks cross-origin). A plain
 # SPA does not need CORS.
 ARG FEDERATION=false
-LABEL maintainer="Neocore Team"
-LABEL description="Neocore micro-frontend served by nginx"
+LABEL maintainer="Template maintainers"
+LABEL description="Angular application served by nginx"
 LABEL version="${VERSION}"
 
 ENV PORT=80

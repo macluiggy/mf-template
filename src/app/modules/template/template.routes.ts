@@ -13,7 +13,7 @@ import { provideNeocoreHost } from '../../integrations/neocore/neocore.providers
  *
  * No HttpClient is provided here on purpose: when hosted, requests use the
  * host's HttpClient and its interceptors (auth, error handler, loader), the
- * same as frontcore. app.config.ts provides one only for standalone dev.
+ * same as any other remote. app.config.ts provides one only for standalone dev.
  *
  * The locale is provided here for the same reason: the host runs no remote
  * config, so the exposed route is the only place where LOCALE_ID and the

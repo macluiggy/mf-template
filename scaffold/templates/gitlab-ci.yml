@@ -1,4 +1,6 @@
-# Pipeline for a Neocore micro-frontend (modeled on frontcore).
+# NEOCORE GitLab CI preset: the pipeline of the NEOCORE fleet (gitads
+# registry, nc_core runners, SSH deploy to the compose file that lives on each
+# server). The generic CI of the template is `.github/workflows/ci.yml`.
 # resolve_versions -> install -> test -> security -> build -> docker -> deploy
 #
 # Canonical template: every `{{TOKEN}}` is derived from `--service` by
