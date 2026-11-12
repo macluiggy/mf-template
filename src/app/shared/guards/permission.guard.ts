@@ -1,17 +1,18 @@
 import { inject } from '@angular/core';
 import type { CanActivateFn } from '@angular/router';
 
-import { PermissionService } from '../services/permission.service';
-import { PubSubService } from '../services/pubsub.service';
+import { Notifier } from '../../core/notifier';
+import { PermissionChecker } from '../../core/permission-checker';
 
-/** Shown in the host's warning toast when a route is blocked. */
+/** Shown when a route is blocked. */
 export const PERMISSION_DENIED_MESSAGE =
   'No tiene permisos para acceder a esta opción.';
 
 /**
- * Blocks a route of this remote unless the user can do `action` on
- * `resource`. On deny it keeps the user where they are and asks the host to
- * show a warning toast. The host's own guards still protect the shell.
+ * Blocks a route unless the user can do `action` on `resource`, using only the
+ * `PermissionChecker` and `Notifier` ports. On deny it keeps the user where
+ * they are and asks the notifier for a warning (a toast in the NEOCORE host).
+ * The host's own guards still protect the shell.
  *
  * @example
  * { path: 'new', canActivate: [permissionGuard('user', 'crear')], loadComponent: ... }
@@ -21,10 +22,10 @@ export function permissionGuard(
   action: string,
 ): CanActivateFn {
   return () => {
-    if (inject(PermissionService).can(resource, action)) {
+    if (inject(PermissionChecker).can(resource, action)) {
       return true;
     }
-    inject(PubSubService).warning(PERMISSION_DENIED_MESSAGE);
+    inject(Notifier).warning(PERMISSION_DENIED_MESSAGE);
     return false;
   };
 }

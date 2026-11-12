@@ -79,7 +79,7 @@ the runtime.
 
 ## `dist/browser` caveat
 
-`ng serve` (NF dev server) and a production `bun run build` write the SAME `dist/browser` directory.
+`ng serve` (NF dev server) and a production `bun run build:federation` write the SAME `dist/browser` directory.
 Running the production build while the dev server is up replaces `remoteEntry.json` with the
 production one (hashed expose names, no build-notifications endpoint) and can make the host load a
 stale/incompatible manifest. Symptoms: the remote no longer hot-swaps, `outFileName` changes, or the
@@ -93,5 +93,5 @@ with `Environment variable 'NODE_ENV' must be one of [DEV, PROD]`. Run the gate 
 
 ```bash
 NODE_ENV=DEV SKIP_ENV_FETCH=1 bun run test
-NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build
+NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build:federation
 ```

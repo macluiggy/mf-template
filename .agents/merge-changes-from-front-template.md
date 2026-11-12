@@ -1,5 +1,10 @@
 # Sync a fork with `front-template`
 
+> **NEOCORE forks only.** This workflow merges the template's history into a fork that cloned it.
+> A project created with `scripts/template-sync.js` (one snapshot commit) never merges the template's
+> commits — it takes updates with `node scripts/template-sync.js` (see
+> [`projects-from-template.md`](projects-from-template.md)).
+
 Forks (`mf-template`, new MFs) are independent repos whose history may not share a root with this
 one. Changes flow with a real `git merge`, never by copying files by hand.
 
@@ -31,7 +36,7 @@ git merge template/main --allow-unrelated-histories   # flag needed only for the
 | `.agents/capabilities.local.md`                                                                            | fork                                                | Never edited in the template                                                          |
 | `app.routes.ts`, `app.config.ts`                                                                           | merge both                                          | Keep `provideMfHttpClient()`                                                          |
 
-After resolving: `bun install && bun run lint && bun run test && bun run build`, and check
+After resolving: `bun install && bun run lint && bun run test && bun run build:federation`, and check
 `dist/browser/remoteEntry.json` still lists every exposed key.
 
 Report the fork's general changes (fixes, tooling, config, CI, test setup) as upstream candidates

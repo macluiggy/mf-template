@@ -94,25 +94,31 @@ features: { denseChunking: true },
 
 ## `angular.json`
 
-- `build`/`serve` use `@angular-architects/native-federation:build`; `serve-original` uses
-  `@angular/build:dev-server`; `esbuild` uses `@angular/build:application`.
-- `serve-original.options.port` is the fork's dev port (template 4250; broker 4211; host 4200) and
-  `headers: { "Access-Control-Allow-Origin": "*" }` is required for cross-origin loading.
-- Polyfills include `es-module-shims` (and `zone.js`). `allowedCommonJsDependencies` includes
-  `encrypt-storage`/`pubsub-js` when bundled.
+- `build` uses `@angular/build:application` (plain SPA; its `federation` configuration swaps in
+  `main.federation.ts` and `es-module-shims` for the production remote build, and
+  `federation-development` does the same with dev settings); `build-federation` uses
+  `@angular-architects/native-federation:build`; `serve` uses `@angular/build:dev-server`;
+  `serve-federation` uses the Native Federation builder.
+- `serve.options.port` is the fork's dev port (template 4250; broker 4211; host 4200).
+  `serve`'s `federation` configuration adds `headers: { "Access-Control-Allow-Origin": "*" }`,
+  required for cross-origin loading; the plain SPA dev server does not need it.
+- Polyfills include `zone.js` and `temporal-polyfill/global`; the `federation` and
+  `federation-development` configurations add `es-module-shims`. `allowedCommonJsDependencies`
+  includes `encrypt-storage`/`pubsub-js` when bundled.
 - `build-test` is a plain `@angular/build:application` (no federation, no es-module-shims) used by
   the `unit-test` builder; do not point tests at the federation builder.
 
 ## Dev server, build notifications and HMR
 
-- `bun run start` runs `load-env.js` then `ng serve` on the fork port. In dev, `remoteEntry.json`
+- `bun run start:federation` runs `load-env.js` then the Native Federation dev server on the fork
+  port. In dev, `remoteEntry.json`
   advertises `buildNotificationsEndpoint`; the host's `watchLocalRemoteRebuilds()` subscribes to it.
 - The host hot-swaps remote component views with `ɵɵreplaceMetadata`; Angular's dev-server HMR only
   handles stylesheets. The fork needs no HMR code — just the dev server + SSE endpoint.
 - The host parser understands Angular <=22.1 `static { this.ɵfac... }` and 22.2 `static ɵfac...`
   fields. A fork compiled with either format can be hot-swapped; a future format change needs a host
   parser update.
-- Do not run a production `bun run build` while `ng serve` is running (same `dist/browser`; see
+- Do not run a production `bun run build:federation` while `ng serve` is running (same `dist/browser`; see
   `version-alignment.md`).
 
 ## Local verification in the host
@@ -137,7 +143,7 @@ features: { denseChunking: true },
 ## Build verification
 
 ```bash
-NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build
+NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build:federation
 node -e "const j=require('./dist/browser/remoteEntry.json');console.log(j.exposes.map(e=>e.key))"
 ```
 

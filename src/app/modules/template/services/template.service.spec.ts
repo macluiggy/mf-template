@@ -22,21 +22,18 @@ describe('TemplateService', () => {
 
   afterEach(() => controller.verify());
 
-  it('lists records through the gateway with pagination and permission headers', () => {
+  it('lists records with pagination', () => {
     let total = 0;
     service.list({ limit: 10, page: 2, search: 'abc' }).subscribe((res) => {
       total = res.data.total;
     });
 
     const req = controller.expectOne(
-      (r) =>
-        r.url === `${environment.apiUrl}/ms-core/template` &&
-        r.method === 'GET',
+      (r) => r.url === `${environment.apiUrl}/template` && r.method === 'GET',
     );
     expect(req.request.params.get('page')).toBe('2');
     expect(req.request.params.get('limit')).toBe('10');
     expect(req.request.params.get('search')).toBe('abc');
-    expect(req.request.headers.get('x-api-key')).toBe('template:listar');
 
     req.flush({
       data: { page: 2, records: [], total: 7, totalPage: 1 },
@@ -48,9 +45,7 @@ describe('TemplateService', () => {
   it('omits an empty search term', () => {
     service.list({ limit: 10, page: 1, search: '' }).subscribe();
 
-    const req = controller.expectOne((r) =>
-      r.url.endsWith('/ms-core/template'),
-    );
+    const req = controller.expectOne((r) => r.url.endsWith('/template'));
     expect(req.request.params.has('search')).toBe(false);
     req.flush({
       data: { page: 1, records: [], total: 0, totalPage: 0 },

@@ -40,12 +40,13 @@ scope: most red states are one of these categories.
 
 ### `angular.json`
 
-- Template builders/targets/polyfills; fork project name, `serve-original.options.port`, assets,
-  styles and `allowedCommonJsDependencies`. Do not lose `es-module-shims` (NF runtime) or the CORS
-  header.
+- Template builders/targets/polyfills; fork project name, `serve.options.port`, assets,
+  styles and `allowedCommonJsDependencies`. Do not lose `es-module-shims` (in the `federation` and
+  `federation-development` configurations, NF runtime) or the federation CORS header.
 - `build-test` must stay a plain `@angular/build:application`; `test` uses
   `@angular/build:unit-test` + `tsconfig.spec.json`.
-- Temporal: keep `temporal-polyfill/global` in the `esbuild` and `build-test` polyfills, add
+- Temporal: keep `temporal-polyfill/global` in the `build`, `federation`, `federation-development`
+  and `build-test` polyfills, add
   `"ESNext.Temporal"` to the fork's `tsconfig.json` `lib` (a fork that lists `lib` explicitly loses
   the types otherwise), keep `temporal-polyfill` in the federation `skip` list, and add
   `import 'temporal-polyfill/global';` to each EXPOSED entry: a host never runs the remote's
@@ -105,7 +106,7 @@ Run from the fork root (explicit `NODE_ENV`, see `version-alignment.md`):
 ```bash
 bun install
 NODE_ENV=DEV SKIP_ENV_FETCH=1 bun run test     # @angular/build:unit-test + node --test scripts
-NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build   # federation build -> dist/browser/remoteEntry.json
+NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build:federation   # federation build -> dist/browser/remoteEntry.json
 bun run lint                                   # oxlint
 bun run verify                                 # oxlint + oxfmt --check (verify)
 ```
@@ -135,7 +136,7 @@ Load an exposed route in the host and confirm the component/module renders with 
 | `RouterModule.forRoot` duplicate guard                                         | Exposed NgModule uses `forRoot`; change to `forChild` (standalone routes use plain `Routes`).                                                                                                                            |
 | `NODE_ENV must be one of [DEV, PROD]`                                          | The terminal exports `NODE_ENV=production`; run with `NODE_ENV=DEV/PROD` explicitly.                                                                                                                                     |
 | `SECRET_KEY` mismatch / no Authorization header                                | Fork `.env` `SECRET_KEY` differs from the host's; token reads return `undefined` silently. Copy the host's value locally.                                                                                                |
-| Remote hot-swap stopped; `outFileName` hashed; no `buildNotificationsEndpoint` | A production `bun run build` overwrote `dist/browser` while `ng serve` was running. Save a source file or restart `ng serve`; don't prod-build while dev-serving.                                                        |
+| Remote hot-swap stopped; `outFileName` hashed; no `buildNotificationsEndpoint` | A production `bun run build:federation` overwrote `dist/browser` while `ng serve` was running. Save a source file or restart `ng serve`; don't prod-build while dev-serving.                                                        |
 | `Cannot find module '@angular/...'` / weird runtime after merge                | `package.json` and `bun.lock`/`node_modules` drifted. `bun install`; verify the installed version.                                                                                                                       |
 | Build OOM/stack error in a large fork                                          | Keep the fork's documented `--stack-size`/memory flags in `start`/`build`; don't remove them to "match" the template blindly.                                                                                            |
 | Route loads but blank page                                                     | Check the route shape (a child may require `:id`), the host router config, and the console for errors; not every blank page is a version issue.                                                                          |

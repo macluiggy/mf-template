@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import PubSub from 'pubsub-js';
 
-import { PubSubTopic } from '../enums/pubsub-topic.enum';
+import { PubSubTopic } from './pubsub-topic.enum';
 import { PubSubService } from './pubsub.service';
 
 describe('PubSubService', () => {
@@ -9,7 +9,7 @@ describe('PubSubService', () => {
 
   beforeEach(() => {
     PubSub.clearAllSubscriptions();
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [PubSubService] });
     service = TestBed.inject(PubSubService);
   });
 

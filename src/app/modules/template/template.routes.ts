@@ -3,7 +3,9 @@
 import 'temporal-polyfill/global';
 import type { Routes } from '@angular/router';
 
-import { provideNeocoreLocale } from '../../shared/locale/neocore-locale';
+import { provideAppCore } from '../../core/app-core.providers';
+import { provideAppLocale } from '../../core/app-locale';
+import { provideNeocoreHost } from '../../integrations/neocore/neocore.providers';
 
 /**
  * Exposed to the host as `./TemplateRoutes` (federation.config.mjs). The host
@@ -11,7 +13,7 @@ import { provideNeocoreLocale } from '../../shared/locale/neocore-locale';
  *
  * No HttpClient is provided here on purpose: when hosted, requests use the
  * host's HttpClient and its interceptors (auth, error handler, loader), the
- * same as frontcore. app.config.ts provides one only for standalone dev.
+ * same as any other remote. app.config.ts provides one only for standalone dev.
  *
  * The locale is provided here for the same reason: the host runs no remote
  * config, so the exposed route is the only place where LOCALE_ID and the
@@ -30,6 +32,13 @@ export const TemplateRoutes: Routes = [
       },
     ],
     path: '',
-    providers: [provideNeocoreLocale()],
+    providers: [
+      // The host never runs app.config.ts: the exposed route provides the core
+      // defaults (ports) itself, then lets the integration override them.
+      provideAppCore(),
+      provideAppLocale(),
+      // NEOCORE host adapters: delete this line and src/app/integrations/neocore/.
+      provideNeocoreHost(),
+    ],
   },
 ];

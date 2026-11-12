@@ -11,7 +11,7 @@ ARG DIST_STAGE=build
 ARG BUN_VERSION=1.4.4
 # ==========================================================================
 # 1) DEPS — local/standalone builds only (CI installs in `install_deps`).
-#    Private @neocore packages: pass a .npmrc as a BuildKit secret, e.g.
+#    Private registry packages: pass a .npmrc as a BuildKit secret, e.g.
 #    docker build --secret id=npmrc,src=.npmrc .   (never COPY it).
 # ==========================================================================
 FROM oven/bun:${BUN_VERSION}-slim AS deps
@@ -45,8 +45,12 @@ FROM ${DIST_STAGE} AS dist_src
 FROM nginx:1.31.8-alpine-slim AS runtime
 
 ARG VERSION=0.1.0
-LABEL maintainer="Neocore Team"
-LABEL description="Neocore micro-frontend served by nginx"
+# FEDERATION=true ships the CORS include: only a federated remote needs it
+# (the host fetches remoteEntry.json and the chunks cross-origin). A plain
+# SPA does not need CORS.
+ARG FEDERATION=false
+LABEL maintainer="Template maintainers"
+LABEL description="Angular application served by nginx"
 LABEL version="${VERSION}"
 
 ENV PORT=80
@@ -68,7 +72,17 @@ RUN apk update && \
 # Served files stay owned by root and read-only (SonarQube docker:S6504).
 COPY --from=dist_src /app/dist/browser /usr/share/nginx/html
 COPY --chmod=0444 nginx.conf /etc/nginx/conf.d/default.conf
+# Hardening headers: every image ships them.
 COPY --chmod=0444 nginx.remote-headers.conf /etc/nginx/conf.d/remote-headers.inc
+# CORS: only a federated remote needs it, so the include reaches the image
+# only with --build-arg FEDERATION=true (CI passes it when the repo builds a
+# federation manifest).
+COPY --chmod=0444 nginx.federation-cors.conf /tmp/federation-cors.conf
+RUN if [ "$FEDERATION" = "true" ]; then \
+      cp /tmp/federation-cors.conf /etc/nginx/conf.d/federation-cors.inc && \
+      chmod 0444 /etc/nginx/conf.d/federation-cors.inc; \
+    fi; \
+    rm -f /tmp/federation-cors.conf
 
 RUN chmod -R a=rX /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx /var/log/nginx && \

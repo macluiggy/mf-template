@@ -2,11 +2,16 @@
 // .gitlab-ci.yml). Same model as backtemplate's scaffold: one canonical
 // template, every per-repo value derived from `--service`.
 // CJS, zero dependencies, `--flag=value` parsing like scripts/generate-module.js.
+//
+// This scaffold is the NEOCORE GitLab CI PRESET. A repo that does not deploy
+// to the NEOCORE fleet can still use it, but the `mf-` service prefix is only
+// a convention there: a service without it is accepted with a warning.
 const fs = require('node:fs');
 const path = require('node:path');
 
 const SCAFFOLD_DIR = __dirname;
 const CONFIG_PATH = path.join(SCAFFOLD_DIR, 'scaffold.config.json');
+// Convention of the NEOCORE fleet, not a requirement of the generator.
 const SERVICE_PREFIX = 'mf-';
 // Written by every build_app `.env` heredoc; extra keys cannot repeat them.
 const BASE_ENV_KEYS = ['NODE_ENV', 'API_URL', 'ENTITY_ROOT', 'SECRET_KEY'];
@@ -18,6 +23,8 @@ function printUsage() {
 
 Required:
   --service=<mf-name>   Micro-frontend name, e.g. mf-virtual-office. All tokens derive from it.
+                         The "mf-" prefix is the NEOCORE convention: without it the generator
+                         warns and derives the tokens from the full name.
   --target=<path>       Target repo where files are written. "." for front-template itself.
 
 Options:
@@ -60,13 +67,19 @@ function readConfig() {
   return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 }
 
+// A service without the NEOCORE `mf-` prefix is accepted: the tokens are
+// derived from the whole name and the caller gets a warning.
+function serviceWarning(service) {
+  if (service.startsWith(SERVICE_PREFIX)) return null;
+  return `warning: service "${service}" does not start with "${SERVICE_PREFIX}" (NEOCORE convention); its tokens are derived from the full name`;
+}
+
 // mf-virtual-office -> SERVICE_NAME/CONTAINER_NAME mf-virtual-office,
 // COMPOSE_IMAGE_VAR FRONT_VIRTUAL_OFFICE_IMAGE_COMMIT, COMPOSE_FILE_* <base>/mf-virtual-office.yml.
 function derive(service, shared, overrides = {}) {
-  if (!service.startsWith(SERVICE_PREFIX)) {
-    throw new Error(`service must start with "${SERVICE_PREFIX}"`);
-  }
-  const bare = service.slice(SERVICE_PREFIX.length);
+  const bare = service.startsWith(SERVICE_PREFIX)
+    ? service.slice(SERVICE_PREFIX.length)
+    : service;
   const serviceName = overrides['service-name'] ?? service;
   const composeFile = (env) =>
     `${overrides[`compose-base-${env}`] ?? shared.composeBasePaths[env]}/${service}.yml`;
@@ -186,9 +199,8 @@ function main() {
   const { service, target } = args;
   if (typeof service !== 'string') fail('--service=<mf-name> is required.');
   if (typeof target !== 'string') fail('--target=<path> is required.');
-  if (!service.startsWith(SERVICE_PREFIX)) {
-    fail(`--service must start with "${SERVICE_PREFIX}" (got "${service}").`);
-  }
+  const warning = serviceWarning(service);
+  if (warning) console.error(warning);
 
   const targetDir = path.resolve(process.cwd(), target);
   if (!fs.existsSync(targetDir) || !fs.statSync(targetDir).isDirectory()) {
@@ -239,4 +251,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { derive, parseArgs, readConfig, render };
+module.exports = { derive, parseArgs, readConfig, render, serviceWarning };

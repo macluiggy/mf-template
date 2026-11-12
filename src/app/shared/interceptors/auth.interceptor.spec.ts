@@ -9,54 +9,65 @@ import {
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { StorageEnum } from '../enums/storage.enum';
-import { StorageService } from '../services/storage.service';
+import { AUTH_TOKEN_PROVIDER } from '../../core/auth-token';
 import { authInterceptor } from './auth.interceptor';
 
-describe('authInterceptor', () => {
-  let http: HttpClient;
-  let controller: HttpTestingController;
-  let storage: StorageService;
-
-  beforeEach(() => {
-    localStorage.clear();
-    TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(withInterceptors([authInterceptor])),
-        provideHttpClientTesting(),
-      ],
-    });
-    http = TestBed.inject(HttpClient);
-    controller = TestBed.inject(HttpTestingController);
-    storage = TestBed.inject(StorageService);
+function setup(tokenProvider?: () => string | null) {
+  TestBed.configureTestingModule({
+    providers: [
+      provideHttpClient(withInterceptors([authInterceptor])),
+      provideHttpClientTesting(),
+      ...(tokenProvider
+        ? [{ provide: AUTH_TOKEN_PROVIDER, useValue: tokenProvider }]
+        : []),
+    ],
   });
 
-  afterEach(() => controller.verify());
+  return {
+    controller: TestBed.inject(HttpTestingController),
+    http: TestBed.inject(HttpClient),
+  };
+}
 
-  it('adds the Bearer token stored by the host and the device info header', () => {
-    storage.saveLocalStorage(StorageEnum.ACCESS_TOKEN, 'abc');
+describe('authInterceptor', () => {
+  it('adds the Bearer token returned by the port', () => {
+    const { controller, http } = setup(() => 'abc');
 
     http.get('/api/resource').subscribe();
     const req = controller.expectOne('/api/resource');
 
     expect(req.request.headers.get('Authorization')).toBe('Bearer abc');
-    expect(req.request.headers.get('x-device-info')).toContain('userAgent');
     req.flush({});
+    controller.verify();
   });
 
-  it('does not add Authorization when there is no usable token', () => {
-    storage.saveLocalStorage(StorageEnum.ACCESS_TOKEN, 'undefined');
+  it('sends no Authorization header with the default null token provider', () => {
+    const { controller, http } = setup();
 
     http.get('/api/resource').subscribe();
     const req = controller.expectOne('/api/resource');
 
     expect(req.request.headers.has('Authorization')).toBe(false);
-    expect(req.request.headers.has('x-device-info')).toBe(true);
     req.flush({});
+    controller.verify();
   });
 
+  it.each([null, '', '   ', 'undefined', 'null'])(
+    'ignores the unusable token %j',
+    (token) => {
+      const { controller, http } = setup(() => token);
+
+      http.get('/api/resource').subscribe();
+      const req = controller.expectOne('/api/resource');
+
+      expect(req.request.headers.has('Authorization')).toBe(false);
+      req.flush({});
+      controller.verify();
+    },
+  );
+
   it('keeps an explicit Authorization header set by the caller', () => {
-    storage.saveLocalStorage(StorageEnum.ACCESS_TOKEN, 'abc');
+    const { controller, http } = setup(() => 'abc');
 
     http
       .get('/api/resource', { headers: { Authorization: 'Bearer custom' } })
@@ -65,5 +76,17 @@ describe('authInterceptor', () => {
 
     expect(req.request.headers.get('Authorization')).toBe('Bearer custom');
     req.flush({});
+    controller.verify();
+  });
+
+  it('adds no host-specific header', () => {
+    const { controller, http } = setup(() => 'abc');
+
+    http.get('/api/resource').subscribe();
+    const req = controller.expectOne('/api/resource');
+
+    expect(req.request.headers.has('x-device-info')).toBe(false);
+    req.flush({});
+    controller.verify();
   });
 });

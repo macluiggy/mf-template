@@ -7,6 +7,11 @@ metadata:
   version: '1.0'
 ---
 
+> **NEOCORE forks only.** This skill merges the template's history into a NEOCORE fork that cloned
+> it. A project created with `scripts/template-sync.js` never merges the template's commits: it takes
+> updates with `node scripts/template-sync.js` (see
+> [`../../projects-from-template.md`](../../projects-from-template.md)).
+
 ## Activation Contract
 
 Load when asked to bring front-template's generic/base changes into one of its forks
@@ -95,7 +100,7 @@ NOT rewritten to the template's standalone style; only their host integration is
   unit + script tests, production build, lint/check, inspect `dist/browser/remoteEntry.json`, start
   the dev server and verify the live shared version and an exposed route in the host (no `NG0203`).
   A green `git status` after `git add` is not enough. Restart `ng serve` after any Angular/NF version
-  change; a production `bun run build` while `ng serve` is running clobbers `dist/browser`.
+  change; a production `bun run build:federation` while `ng serve` is running clobbers `dist/browser`.
 - **Angular 17+ syntax in new/touched template code:** standalone, signals, `inject()`,
   `@if`/`@for`/`@switch`, OnPush. No new NgModules, no `*ngIf`/`*ngFor`, no constructor injection.
   Legacy fork modules are the exception: don't rewrite them as part of the merge.
@@ -157,7 +162,7 @@ NOT rewritten to the template's standalone style; only their host integration is
    `references/native-federation-contract.md`.
 5. **Run the gate** (`references/post-merge-fixups.md`):
    - `NODE_ENV=DEV SKIP_ENV_FETCH=1 bun run test` (unit + `test:scripts`)
-   - `NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build`
+   - `NODE_ENV=PROD SKIP_ENV_FETCH=1 bun run build:federation`
    - `bun run lint` / `bun run verify`
    - inspect `dist/browser/remoteEntry.json`: every expose, shared `@angular/core` version/
      `requiredVersion`, `buildNotificationsEndpoint`

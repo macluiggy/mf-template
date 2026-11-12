@@ -3,11 +3,12 @@ import { DEFAULT_CURRENCY_CODE, LOCALE_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import {
-  NEOCORE_CURRENCY_CODE,
-  NEOCORE_LOCALE_ID,
+  ES_EC_LOCALE,
+  provideAppLocale,
   provideNeocoreLocale,
+  registerAppLocale,
   registerNeocoreLocale,
-} from './neocore-locale';
+} from './app-locale';
 
 /**
  * Separators of the locale Angular formats with, read from Angular itself:
@@ -21,36 +22,54 @@ function separatorsOf(locale: string): { decimal: string; group: string } {
   };
 }
 
-describe('provideNeocoreLocale', () => {
-  it('provides the Spanish (Ecuador) locale id', () => {
-    TestBed.configureTestingModule({ providers: [provideNeocoreLocale()] });
+describe('provideAppLocale', () => {
+  it('provides the Spanish (Ecuador) locale id by default', () => {
+    TestBed.configureTestingModule({ providers: [provideAppLocale()] });
 
     expect(TestBed.inject(LOCALE_ID)).toBe('es-EC');
-    expect(TestBed.inject(LOCALE_ID)).toBe(NEOCORE_LOCALE_ID);
+    expect(TestBed.inject(LOCALE_ID)).toBe(ES_EC_LOCALE.id);
   });
 
-  it('provides the US dollar as the default currency', () => {
-    TestBed.configureTestingModule({ providers: [provideNeocoreLocale()] });
+  it('provides the US dollar as the default currency by default', () => {
+    TestBed.configureTestingModule({ providers: [provideAppLocale()] });
 
     expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe('USD');
-    expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe(NEOCORE_CURRENCY_CODE);
+    expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe(ES_EC_LOCALE.currency);
+  });
+
+  it('provides another locale id and currency when the caller asks for them', () => {
+    TestBed.configureTestingModule({
+      providers: [provideAppLocale({ currency: 'EUR', id: 'en-US' })],
+    });
+
+    expect(TestBed.inject(LOCALE_ID)).toBe('en-US');
+    expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe('EUR');
+  });
+
+  it('keeps the default locale id when only the currency is overridden', () => {
+    TestBed.configureTestingModule({
+      providers: [provideAppLocale({ currency: 'EUR' })],
+    });
+
+    expect(TestBed.inject(LOCALE_ID)).toBe(ES_EC_LOCALE.id);
+    expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe('EUR');
   });
 
   it('overrides the default currency of an outer injector', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' },
-        provideNeocoreLocale(),
+        provideAppLocale(),
       ],
     });
 
-    expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe(NEOCORE_CURRENCY_CODE);
+    expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe(ES_EC_LOCALE.currency);
   });
 });
 
-describe('registerNeocoreLocale', () => {
+describe('registerAppLocale', () => {
   it('registers the locale data, so the pipes format in Spanish', () => {
-    registerNeocoreLocale();
+    registerAppLocale();
 
     const { decimal, group } = separatorsOf('es-EC');
 
@@ -60,15 +79,28 @@ describe('registerNeocoreLocale', () => {
 
   it('is idempotent: calling it twice does not throw', () => {
     expect(() => {
-      registerNeocoreLocale();
-      registerNeocoreLocale();
+      registerAppLocale();
+      registerAppLocale();
     }).not.toThrow();
+  });
+});
+
+describe('the deprecated Neocore aliases', () => {
+  it('provide the same locale as the default preset', () => {
+    TestBed.configureTestingModule({ providers: [provideNeocoreLocale()] });
+
+    expect(TestBed.inject(LOCALE_ID)).toBe('es-EC');
+    expect(TestBed.inject(DEFAULT_CURRENCY_CODE)).toBe('USD');
+  });
+
+  it('register the same locale data as the default preset', () => {
+    expect(() => registerNeocoreLocale()).not.toThrow();
   });
 });
 
 describe('Spanish (Ecuador) formatting', () => {
   beforeAll(() => {
-    registerNeocoreLocale();
+    registerAppLocale();
   });
 
   it('formats numbers with the Spanish separators', () => {
