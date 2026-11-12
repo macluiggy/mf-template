@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { EncryptStorageNoble } from 'encrypt-storage';
 
-import { environment } from '../../../environments/environment';
-import { StorageEnum } from '../enums/storage.enum';
+import { environment } from '../../../../environments/environment';
+import { StorageEnum } from './storage.enum';
 import { StorageService } from './storage.service';
 
 describe('StorageService', () => {
@@ -10,7 +10,7 @@ describe('StorageService', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [StorageService] });
     service = TestBed.inject(StorageService);
   });
 

@@ -1,15 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, defer, finalize } from 'rxjs';
 
-import { PubSubService } from './pubsub.service';
+import { Notifier } from '../../core/notifier';
 
 /**
- * Reference-counts the operations in flight and drives the host's global
- * loader through the PubSub `loading` topic.
+ * Reference-counts the operations in flight and drives the global loader
+ * through the `Notifier` port.
  *
- * The host shows a single global loader, so publishing `loading(false)` while
+ * A host shows a single global loader, so publishing `loading(false)` while
  * another operation is still running hides it too early. This service counts
- * the active operations and only publishes `loading(false)` when the last one
+ * the active operations and only reports `loading(false)` when the last one
  * finishes (complete, error or unsubscribe).
  *
  * @example
@@ -20,20 +20,20 @@ import { PubSubService } from './pubsub.service';
  */
 @Injectable({ providedIn: 'root' })
 export class LoadingTrackerService {
-  private readonly pubSub = inject(PubSubService);
+  private readonly notifier = inject(Notifier);
   private counter = 0;
 
   /**
    * Registers an operation in flight and returns its `stop` function.
    *
-   * The loader is published on the 0 -> 1 transition only. The returned
+   * The loader is reported on the 0 -> 1 transition only. The returned
    * function is idempotent (calling it twice decrements the counter once) and
-   * publishes `loading(false)` on the 1 -> 0 transition only.
+   * reports `loading(false)` on the 1 -> 0 transition only.
    */
   start(): () => void {
     this.counter += 1;
     if (this.counter === 1) {
-      this.pubSub.loading(true);
+      this.notifier.loading(true);
     }
 
     let stopped = false;
@@ -44,7 +44,7 @@ export class LoadingTrackerService {
       stopped = true;
       this.counter = Math.max(0, this.counter - 1);
       if (this.counter === 0) {
-        this.pubSub.loading(false);
+        this.notifier.loading(false);
       }
     };
   }

@@ -1,8 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 
-import type { UserPermission } from '../interfaces/user-permission.interface';
-import { PermissionService, isActionAllowed } from './permission.service';
-import { StorageService } from './storage.service';
+import { provideStorageMock } from '../../../../testing';
+import {
+  NeocorePermissionChecker,
+  isActionAllowed,
+} from './neocore-permission-checker';
+import type { UserPermission } from './user-permission.interface';
 
 const permission = (allow: string[], denny: string[] = []): UserPermission => ({
   allow: { action: allow },
@@ -49,30 +52,26 @@ describe('isActionAllowed', () => {
 });
 
 function setup(stored: Record<string, unknown>) {
+  const { providers } = provideStorageMock(stored);
   TestBed.configureTestingModule({
-    providers: [
-      {
-        provide: StorageService,
-        useValue: { getLocalStorage: (key: string) => stored[key] },
-      },
-    ],
+    providers: [NeocorePermissionChecker, ...providers],
   });
-  return TestBed.inject(PermissionService);
+  return TestBed.inject(NeocorePermissionChecker);
 }
 
-describe('PermissionService', () => {
+describe('NeocorePermissionChecker', () => {
   it('uses the user PERMISSION when there is no ROLE_PERMISSION', () => {
-    const service = setup({ PERMISSION: permission(['user:crear']) });
-    expect(service.can('user', 'crear')).toBe(true);
-    expect(service.can('user', 'borrar')).toBe(false);
+    const checker = setup({ PERMISSION: permission(['user:crear']) });
+    expect(checker.can('user', 'crear')).toBe(true);
+    expect(checker.can('user', 'borrar')).toBe(false);
   });
 
   it('allows when the role allows even if the user payload does not', () => {
-    const service = setup({
+    const checker = setup({
       PERMISSION: permission([]),
       ROLE_PERMISSION: permission(['user:*']),
     });
-    expect(service.can('user', 'borrar')).toBe(true);
+    expect(checker.can('user', 'borrar')).toBe(true);
   });
 
   it('denies when nothing is stored', () => {

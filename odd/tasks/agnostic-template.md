@@ -15,8 +15,8 @@ Objective: mf-template works as a normal standalone Angular app for any project;
 
 | ID | Specs | What | Route | Status | Commit |
 |---|---|---|---|---|---|
-| T1 | S3 | Standalone by default, federation opt-in (angular.json targets, main.ts/main.federation.ts, scripts, compose healthcheck, CI remoteEntry check conditional, temporal/generate-module tests) | delegated | pending | — |
-| T2 | S4 | Ports + defaults in `src/app/core/`, NEOCORE adapters in `src/app/integrations/neocore/` with `provideNeocoreHost()`; example module and test kit use the ports | delegated | pending | — |
+| T1 | S3 | Standalone by default, federation opt-in (angular.json targets, main.ts/main.federation.ts, scripts, compose healthcheck, CI remoteEntry check conditional, temporal/generate-module tests) | delegated | done | e65c0ae |
+| T2 | S4 | Ports + defaults in `src/app/core/`, NEOCORE adapters in `src/app/integrations/neocore/` with `provideNeocoreHost()`; example module and test kit use the ports | delegated | done | (this commit) |
 | T3 | S5 | load-env generic | delegated | pending | — |
 | T4 | S6 | Generic locale provider, drop lib-components refs, nginx CORS include only for federation | delegated | pending | — |
 | T5 | S6 | CI/scaffold/docs/skills neutral, AGENTS.md rules conditional on federation | delegated | pending | — |
@@ -24,3 +24,5 @@ Objective: mf-template works as a normal standalone Angular app for any project;
 ## Log
 
 - L1 (2026-11-12): inventory by read-only explorer. The real `@angular/build:application` config already exists as the `esbuild` target; going standalone is renaming targets plus a direct-bootstrap `main.ts`. `storage.service.ts` creates `EncryptStorageNoble(environment.secretKey)` at module load, so today any app needs a 10+ char SECRET_KEY. Risky tests: `scripts/temporal.test.js` (reads target `esbuild`), `generate-module.test.js` (`--expose`), `gitlab-ci-scaffold.test.js` (remoteEntry, `mf-` prefix), `load-env.test.js`, host-contract specs.
+- L2 (2026-11-12): T1 done (e65c0ae): plain SPA by default, federation via build:federation/start:federation. Gates: lint, format:check, build (index.html, no remoteEntry), build:federation (remoteEntry.json), vitest 68/68, node:test 46/46.
+- L3 (2026-11-12): T2 done: ports in src/app/core (Notifier, KeyValueStorage, AUTH_TOKEN_PROVIDER, PermissionChecker) with defaults; NEOCORE adapters in src/app/integrations/neocore behind provideNeocoreHost(); encrypt-storage created lazily; provideMfHttpClient kept as alias. Gates: lint 0, format:check 0, build 0, build:federation 0, vitest 97/97, node:test 46/46. Lego check: a copy without src/app/integrations/neocore and without the provideNeocoreHost() lines builds (exit 0).

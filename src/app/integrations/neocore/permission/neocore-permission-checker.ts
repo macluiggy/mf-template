@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 
-import { StorageEnum } from '../enums/storage.enum';
-import type { UserPermission } from '../interfaces/user-permission.interface';
-import { StorageService } from './storage.service';
+import { KeyValueStorage } from '../../../core/key-value-storage';
+import { PermissionChecker } from '../../../core/permission-checker';
+import { StorageEnum } from '../storage/storage.enum';
+import type { UserPermission } from './user-permission.interface';
 
 const WILDCARD = '*';
 
@@ -33,29 +34,21 @@ export function isActionAllowed(
 }
 
 /**
- * Answers "can the signed-in user do `action` on `resource`?" from the
- * permissions the host stored in encrypted localStorage. The role payload
- * (`ROLE_PERMISSION`) is checked first and the user payload (`PERMISSION`)
- * second; either one allowing it is enough. Without `ROLE_PERMISSION` this is
- * exactly the user-only check most forks use today.
+ * NEOCORE adapter for {@link PermissionChecker}: answers from the permissions
+ * the host stored under `ROLE_PERMISSION` (role) and `PERMISSION` (user).
+ * The role payload is checked first and the user payload second; either one
+ * allowing it is enough.
  *
  * Only for showing or hiding UI: the gateway enforces the real permission
  * with the `x-api-key` header (`buildPermissionHeaders`).
- *
- * @example
- * readonly canCreate = inject(PermissionService).can('user', 'crear');
  */
-@Injectable({ providedIn: 'root' })
-export class PermissionService {
-  private readonly storage = inject(StorageService);
+@Injectable()
+export class NeocorePermissionChecker extends PermissionChecker {
+  private readonly storage = inject(KeyValueStorage);
 
   can(resource: string, action: string): boolean {
     return [StorageEnum.ROLE_PERMISSION, StorageEnum.PERMISSION].some((key) =>
-      isActionAllowed(
-        this.storage.getLocalStorage<UserPermission>(key),
-        resource,
-        action,
-      ),
+      isActionAllowed(this.storage.get<UserPermission>(key), resource, action),
     );
   }
 }

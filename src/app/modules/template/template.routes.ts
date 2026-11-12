@@ -3,6 +3,8 @@
 import 'temporal-polyfill/global';
 import type { Routes } from '@angular/router';
 
+import { provideAppCore } from '../../core/app-core.providers';
+import { provideNeocoreHost } from '../../integrations/neocore/neocore.providers';
 import { provideNeocoreLocale } from '../../shared/locale/neocore-locale';
 
 /**
@@ -30,6 +32,13 @@ export const TemplateRoutes: Routes = [
       },
     ],
     path: '',
-    providers: [provideNeocoreLocale()],
+    providers: [
+      // The host never runs app.config.ts: the exposed route provides the core
+      // defaults (ports) itself, then lets the integration override them.
+      provideAppCore(),
+      provideNeocoreLocale(),
+      // NEOCORE host adapters: delete this line and src/app/integrations/neocore/.
+      provideNeocoreHost(),
+    ],
   },
 ];

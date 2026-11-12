@@ -58,6 +58,15 @@ exposes: {
 - `bun run generate:module -- --name=<name> --expose` does both edits.
 - Verify after `bun run build:federation`: `dist/browser/remoteEntry.json` → `exposes[].key`.
 
+## NEOCORE integration
+
+Everything that only makes sense against the NEOCORE host — PubSub, the encrypted storage with its
+`SECRET_KEY`, `x-device-info`, `x-api-key` and the `ms-core` paths — lives in ONE folder:
+[`src/app/integrations/neocore/`](../src/app/integrations/neocore/README.md). `provideNeocoreHost()`
+binds all of it over the safe defaults of `provideAppCore()`. The rest of this document describes
+that contract; without the integration the app runs on the core ports (console notifier, plain
+localStorage, no token, allow-all permissions).
+
 ## Interceptors
 
 The host never executes this app's `app.config.ts`; it only imports the exposed file. The template
@@ -66,10 +75,15 @@ follows the same rule as frontcore:
 - **Hosted mode:** exposed `Routes` do **not** provide an HttpClient. Requests go through the host's
   HttpClient and its interceptors (`AuthInterceptor`, `ErrorHandlerInterceptor`, `loaderInterceptor`
   in `frontcontainer/src/app/app.config.ts`), so the host shows the loader and error toasts.
-- **Standalone dev (`bun run start`):** `app.config.ts` registers `provideMfHttpClient()`
-  (`src/app/shared/providers/http.providers.ts`) with the MF's own `authInterceptor`.
-- Never add `provideHttpClient()`/`provideMfHttpClient()` to the `providers` of an exposed route: it
-  creates a separate HttpClient that bypasses the host interceptors.
+- **Standalone dev (`bun run start`):** `app.config.ts` registers `provideAppHttpClient()`
+  (`src/app/shared/providers/http.providers.ts`). The generic `authInterceptor` adds
+  `Authorization: Bearer <token>` from the `AUTH_TOKEN_PROVIDER` port (default: no token).
+  `provideMfHttpClient()` is a deprecated alias kept for forks.
+- Interceptors that belong to an integration are contributed through `APP_HTTP_INTERCEPTORS`
+  (multi token). `provideNeocoreHost()` uses it for `x-device-info`; the generic core never imports
+  it.
+- Never add `provideHttpClient()`/`provideAppHttpClient()` to the `providers` of an exposed route:
+  it creates a separate HttpClient that bypasses the host interceptors.
 
 ## Locale
 
@@ -98,8 +112,10 @@ The locale data is imported with a **relative** path from `node_modules`
 
 ## PubSub contract
 
-The host subscribes to these topics (`frontcontainer/src/app/app.component.ts`); use
-`PubSubService` / `PubSubTopic`, never raw strings:
+The host subscribes to these topics (`frontcontainer/src/app/app.component.ts`). Generic code never
+touches them: it calls the `Notifier` port, and `provideNeocoreHost()` binds `PubSubNotifier` (which
+publishes these topics through `PubSubService` / `PubSubTopic`, never raw strings). Importing PubSub
+outside `src/app/integrations/neocore/` is a bug.
 
 | Topic                          | Payload                  | Host reaction         |
 | ------------------------------ | ------------------------ | --------------------- |
@@ -109,10 +125,11 @@ The host subscribes to these topics (`frontcontainer/src/app/app.component.ts`);
 | `login-redirect`               | `boolean`                | Post-login navigation |
 | `clearBreadCrumb`              | `boolean`                | Clears the breadcrumb |
 
-- Never publish `loading(true)`/`loading(false)` by hand: the host shows one global loader, so
+- Never publish `loading(true)`/`loading(false)` by hand: a host shows one global loader, so
   overlapping operations would hide it too early. Use `LoadingTrackerService.track()`, which
-  reference-counts them and publishes `loading(false)` only when the last one finishes.
-- For errors, publish `pubSub.error(toUserMessage(err))`: it reads the `message` of the backend
+  reference-counts them and reports `loading(false)` through the `Notifier` port only when the last
+  one finishes.
+- For errors, call `notifier.error(toUserMessage(err))`: it reads the `message` of the backend
   envelope. In hosted mode the host's error interceptor already toasts HTTP errors, so show one
   yourself only for non-HTTP failures (validation, file parsing, a rejected promise).
 

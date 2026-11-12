@@ -5,8 +5,10 @@ import {
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideAppCore } from './core/app-core.providers';
+import { provideNeocoreHost } from './integrations/neocore/neocore.providers';
 import { provideNeocoreLocale } from './shared/locale/neocore-locale';
-import { provideMfHttpClient } from './shared/providers/http.providers';
+import { provideAppHttpClient } from './shared/providers/http.providers';
 
 // Standalone-dev configuration only: the host never executes this file.
 // Anything the exposed routes need at runtime must also be in their providers.
@@ -14,7 +16,10 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
+    provideAppCore(),
     provideNeocoreLocale(),
-    provideMfHttpClient(),
+    provideAppHttpClient(),
+    // NEOCORE host adapters: delete this line and src/app/integrations/neocore/.
+    provideNeocoreHost(),
   ],
 };

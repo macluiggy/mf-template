@@ -22,17 +22,19 @@ with no manual step.
 | Variable               | Required | Notes                                                           |
 | ---------------------- | -------- | --------------------------------------------------------------- |
 | `API_URL`              | yes      | Gateway base URL, validated as URL → `environment.apiUrl`       |
-| `SECRET_KEY`           | yes      | ≥ 10 chars, **identical to the host** → `environment.secretKey` |
+| `SECRET_KEY`           | with `provideNeocoreHost()` | ≥ 10 chars, **identical to the host** → `environment.secretKey` |
 | `ENTITY_ROOT`          | yes      | Root entity code → `environment.entityRoot`                     |
 | `NODE_ENV`             | no       | `DEV` (default) or `PROD` → `environment.production`            |
 | `SKIP_ENV_FETCH`       | no       | `1` skips the remote config call                                |
 | `ENV_FETCH_TIMEOUT_MS` | no       | Remote call timeout, default 5000                               |
 
-## Why SECRET_KEY must match the host
+## Why SECRET_KEY must match the host (only with `provideNeocoreHost()`)
 
 The host stores the access token with `encrypt-storage` (`EncryptStorageNoble`): the key **name** is
 `hash('ACCESS_TOKEN')` and the value is AES-GCM encrypted, both derived from `SECRET_KEY`. The remote
-reads it with the same `StorageEnum` names. With a different secret the hashed names never match, so
+reads it with the same `StorageEnum` names
+(`src/app/integrations/neocore/storage/storage.service.ts`). With a different secret the hashed names
+never match, so
 reads return `undefined` with no error, and requests go out without `Authorization`.
 
 ## Adding a variable
