@@ -41,5 +41,5 @@ the default for new projects and the template's runner). Learned migrating `fron
 | Template specs render nothing (`expected 0 to be 2` rows)             | They are zoneless; with zone.js loaded TestBed switches to zone CD. The template's `template-table` spec provides `provideZonelessChangeDetection()` for this; do the same in any zoneless spec relying on auto change detection |
 
 6. **Gate.** `bun run test` (all files green), `bun check`, production build,
-   `bun install --frozen-lockfile`. Never delete or `skip` a test to get green; a failure caused by
+   `bun install`. Never delete or `skip` a test to get green; a failure caused by
    source code is reported, not hidden.

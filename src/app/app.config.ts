@@ -5,6 +5,7 @@ import {
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideNeocoreLocale } from './shared/locale/neocore-locale';
 import { provideMfHttpClient } from './shared/providers/http.providers';
 
 // Standalone-dev configuration only: the host never executes this file.
@@ -13,6 +14,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
+    provideNeocoreLocale(),
     provideMfHttpClient(),
   ],
 };

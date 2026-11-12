@@ -71,6 +71,31 @@ follows the same rule as frontcore:
 - Never add `provideHttpClient()`/`provideMfHttpClient()` to the `providers` of an exposed route: it
   creates a separate HttpClient that bypasses the host interceptors.
 
+## Locale
+
+The host (`frontcontainer`) provides no `LOCALE_ID`: the pipes of a remote mounted by the host
+would default to `en-US`. The remote fixes it itself, because the host never runs the remote's
+`app.config.ts` (same rule as the interceptors above).
+
+- `app.config.ts` calls `provideNeocoreLocale()` for standalone dev.
+- Every exposed `Routes` array provides it in the root route's `providers`, so a hosted remote
+  formats dates, numbers and currency in Spanish (Ecuador) with USD as the default currency.
+
+`provideNeocoreLocale()` registers Angular's locale data and provides `LOCALE_ID` (`es-EC`) and
+`DEFAULT_CURRENCY_CODE` (`USD`).
+
+The locale data is imported with a **relative** path from `node_modules`
+(`../../../../node_modules/@angular/common/locales/es`), never with the bare specifier
+`@angular/common/locales/*`:
+
+- `@angular/common` is a shared singleton of the federation, so the bare specifier is an external
+  of that package and is left to the import map.
+- Sharing the locale files (`resolveGlob: true`) scopes the whole `@angular/common` package,
+  `@angular/common/http` included, to the remote: the remote loses the host's HttpClient and its
+  interceptors.
+- The locale file is self-contained data, so it is bundled into the remote instead. Same approach
+  as `frontbills` and `frontvirtualofficebroker`.
+
 ## PubSub contract
 
 The host subscribes to these topics (`frontcontainer/src/app/app.component.ts`); use
@@ -83,6 +108,13 @@ The host subscribes to these topics (`frontcontainer/src/app/app.component.ts`);
 | `success` / `warning` / `info` | `string`                 | Toast                 |
 | `login-redirect`               | `boolean`                | Post-login navigation |
 | `clearBreadCrumb`              | `boolean`                | Clears the breadcrumb |
+
+- Never publish `loading(true)`/`loading(false)` by hand: the host shows one global loader, so
+  overlapping operations would hide it too early. Use `LoadingTrackerService.track()`, which
+  reference-counts them and publishes `loading(false)` only when the last one finishes.
+- For errors, publish `pubSub.error(toUserMessage(err))`: it reads the `message` of the backend
+  envelope. In hosted mode the host's error interceptor already toasts HTTP errors, so show one
+  yourself only for non-HTTP failures (validation, file parsing, a rejected promise).
 
 `pubsub-js` is skipped from federation sharing (CommonJS shape), so every app bundles its own copy.
 The bus is still shared: pubsub-js registers itself on `window.PubSub` and a later copy reuses the
