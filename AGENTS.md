@@ -37,6 +37,11 @@ live in [`.agents/`](.agents/); open the relevant doc before touching that area.
   and from an `import 'temporal-polyfill/global';` in every exposed entry when hosted (a host never
   runs a remote's polyfills).
 - ⚠️ Never commit `.env`, `.npmrc`, `src/environments/*`, `dist/` — they are gitignored on purpose.
+- ⚠️ [Projects created from this template never carry its commits](.agents/projects-from-template.md):
+  a new project starts from ONE snapshot commit plus `.template-sync`, and takes later template
+  updates only with `node scripts/template-sync.js` (one `chore: sync` commit per update). Never
+  `git merge`/`pull`/`cherry-pick` from the template remote in a project. The template itself keeps
+  its full history.
 - ⚠️ **front-template keeps evolving from its forks.** When working in a fork (above all while
   merging front-template into it), if a change is general — a fix, tooling, config, CI, shared
   plumbing, test setup — and would help every new front/MF, propose upstreaming it to
@@ -90,6 +95,7 @@ Fork-only capabilities: [`.agents/capabilities.local.md`](.agents/capabilities.l
 - Environment variables and `SECRET_KEY` → [`.agents/environment.md`](.agents/environment.md)
 - Testing → [`.agents/testing.md`](.agents/testing.md)
 - Docker, nginx, CI/CD → [`.agents/deployment.md`](.agents/deployment.md)
+- Create a project from this template, or take template updates without its commits → [`.agents/projects-from-template.md`](.agents/projects-from-template.md)
 - Sync a fork with this repo → [`.agents/merge-changes-from-front-template.md`](.agents/merge-changes-from-front-template.md) and the end-to-end [merge skill](.agents/skills/merge-fork-from-front-template/SKILL.md)
 - Example module → [`src/app/modules/template/README.md`](src/app/modules/template/README.md)
 
