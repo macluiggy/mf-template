@@ -15,9 +15,18 @@ read-only served files, `HEALTHCHECK` on `/health`. Private `@neocore` packages 
 
 ## nginx
 
-`nginx.conf` serves `dist/browser` with CORS (`Access-Control-Allow-Origin: *`, required because the
-host fetches `remoteEntry.json` and chunks cross-origin), `no-store` caching (a deploy must be
-visible immediately), SPA fallback to `index.html`, `OPTIONS` → 204, and `/health`.
+`nginx.conf` serves `dist/browser` with:
+
+- **Cache by file type.** Every `.js`/`.css` the build emits is content-hashed (esbuild
+  `name-HASH.js`, Native Federation shared bundles `name.HASH.js`), so it is cached for a year
+  (`immutable`). Everything else — `remoteEntry.json`, `importmap.json`, `index.html`, assets without
+  a hash — is `no-store`, so a deploy is visible immediately. Never give a `.js`/`.css` a fixed name.
+- **Headers in one place.** CORS (`Access-Control-Allow-Origin: *`, required because the host fetches
+  `remoteEntry.json` and chunks cross-origin), `X-Content-Type-Options: nosniff` and
+  `Referrer-Policy` live in `nginx.remote-headers.conf` (copied to `/etc/nginx/conf.d/remote-headers.inc`),
+  included in the server and in every location: nginx drops all inherited `add_header` in a location
+  that declares its own, so a location without the include silently loses CORS.
+- gzip for JS/CSS/JSON/SVG, SPA fallback to `index.html`, `OPTIONS` → 204, and `/health`.
 The MF is served at the root of its own origin; do not add path prefixes (`/fvc`-style locations)
 unless the reverse proxy requires it.
 
