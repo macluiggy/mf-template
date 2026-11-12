@@ -50,8 +50,9 @@ grep -o '"@angular/core@[0-9.]*"' bun.lock | sort -u
 ```
 
 If they disagree, fix the declaration (`package.json`), run `bun install`, and verify the installed
-version. Never rely on `node_modules` diverging from the manifest; CI/`bun install --frozen-lockfile`
-will reproduce the declared version and break the runtime.
+version. Never rely on `node_modules` diverging from the manifest; CI runs a plain `bun install`
+from `package.json` (no lockfile is versioned) and will reproduce the declared version and break
+the runtime.
 
 ## Aligning a fork
 

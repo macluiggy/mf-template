@@ -59,7 +59,10 @@ variables:
   # from `.bun-version` / `.node-version` (single source of truth, same as
   # backtemplate) and every job gets them through its dotenv artifact.
 
-# Two caches: a stable download store, and node_modules keyed by bun.lock.
+# Two caches: a stable download store, and node_modules keyed by package.json.
+# bun.lock is intentionally NOT versioned: each pipeline regenerates it with
+# `bun install` (no --frozen-lockfile) so changes to @neocore/lib-components
+# never trigger an integrity-check failure.
 .bun_store_cache: &bun_store_cache
   key: 'bun-store'
   paths:
@@ -68,9 +71,15 @@ variables:
 .bun_modules_cache: &bun_modules_cache
   key:
     files:
-      - bun.lock
+      - package.json
   paths:
     - node_modules/
+
+# Republished @neocore packages keep the same version (1.0.0-dev), so bun's
+# download cache and a restored node_modules/ would serve the old tarball.
+# Purge the internal scope before every install so it is always fetched fresh.
+.purge_neocore: &purge_neocore
+  - rm -rf "${BUN_INSTALL_CACHE_DIR:-$CI_PROJECT_DIR/.bun-cache}/@neocore" node_modules/@neocore
 
 # Private @neocore registry (libcomponents, project 140) authenticated with
 # CI_JOB_TOKEN. This project must be in the job-token allowlist of
@@ -106,8 +115,10 @@ resolve_versions:
       policy: pull
   before_script:
     - *npmrc_setup
-    # Verifies the lockfile against the restored cache (fast on a warm cache).
-    - bun install --frozen-lockfile --ignore-scripts
+    - *purge_neocore
+    # bun.lock is regenerated on every install (no --frozen-lockfile: it is not
+    # versioned), so a republished @neocore tarball is always fetched.
+    - bun install --ignore-scripts
 
 install_deps:
   extends: .bun_job
@@ -137,8 +148,9 @@ install_deps:
       policy: pull
   before_script:
     - *npmrc_setup
+    - *purge_neocore
     - npm install -g bun@${BUN_VERSION}
-    - bun install --frozen-lockfile --ignore-scripts
+    - bun install --ignore-scripts
   needs:
     - job: resolve_versions
 

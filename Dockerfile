@@ -16,10 +16,11 @@ ARG BUN_VERSION=1.4.4
 # ==========================================================================
 FROM oven/bun:${BUN_VERSION}-slim AS deps
 WORKDIR /app
-COPY package.json bun.lock bunfig.toml ./
+# No lockfile is versioned: bun install regenerates bun.lock from package.json.
+COPY package.json bunfig.toml ./
 # --ignore-scripts: `prepare` bootstraps a developer .env, useless in an image.
 RUN --mount=type=secret,id=npmrc,target=/app/.npmrc \
-    bun install --frozen-lockfile --ignore-scripts
+    bun install --ignore-scripts
 
 # ==========================================================================
 # 2) BUILD — local/standalone builds only (CI builds in `build_app`).
@@ -67,6 +68,7 @@ RUN apk update && \
 # Served files stay owned by root and read-only (SonarQube docker:S6504).
 COPY --from=dist_src /app/dist/browser /usr/share/nginx/html
 COPY --chmod=0444 nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=0444 nginx.remote-headers.conf /etc/nginx/conf.d/remote-headers.inc
 
 RUN chmod -R a=rX /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx /var/log/nginx && \

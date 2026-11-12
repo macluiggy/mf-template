@@ -65,6 +65,8 @@ live in [`.agents/`](.agents/); open the relevant doc before touching that area.
 | HttpClient with auth for standalone dev (also: interceptor, Bearer, x-device-info; hosted mode uses the host's) | `provideMfHttpClient()` + functional `authInterceptor` (Bearer from host token, `x-device-info`) | `src/app/shared/providers/http.providers.ts`, `src/app/shared/interceptors/auth.interceptor.ts` | [`.agents/host-integration.md`](.agents/host-integration.md#interceptors)    |
 | Read/write encrypted localStorage shared with the host (also: token, session, encrypt-storage)                  | `StorageService` + `StorageEnum` (the host's 12 key names, byte-identical)                        | `src/app/shared/services/storage.service.ts`, `src/app/shared/enums/storage.enum.ts`            | [`.agents/environment.md`](.agents/environment.md)                           |
 | Show loader/toasts in the host (also: notifications, pubsub, events)                                            | `PubSubService` + `PubSubTopic`                                                                  | `src/app/shared/services/pubsub.service.ts`, `src/app/shared/enums/pubsub-topic.enum.ts`        | [`.agents/host-integration.md`](.agents/host-integration.md#pubsub-contract) |
+| Global loader for overlapping operations (also: loading, spinner, counter, LoaderService)                       | `LoadingTrackerService` — ref-counted over the PubSub `loading` topic                            | `src/app/shared/services/loading-tracker.service.ts`                                            | [`.agents/host-integration.md`](.agents/host-integration.md#pubsub-contract) |
+| User message from an HTTP error (also: error toast, backend envelope message)                                   | `toUserMessage(error)`                                                                           | `src/app/shared/helpers/error-message.helper.ts`                                                | —                                                                            |
 | Show/hide UI by permission (also: can, validPermissionResourceAction, ROLE_PERMISSION, PERMISSION, roles)    | `PermissionService.can(resource, action)` — role payload first, then user; deny wins; `x:*` wildcard | `src/app/shared/services/permission.service.ts`                                                 | [`.agents/architecture.md`](.agents/architecture.md)                         |
 | Protect a remote route by permission (also: guard, canActivate, resource:action)                               | `permissionGuard(resource, action)` — blocks and asks the host for a warning toast                 | `src/app/shared/guards/permission.guard.ts`                                                     | [`.agents/architecture.md`](.agents/architecture.md)                         |
 | Permission headers for the gateway (also: x-api-key, resource:action)                                           | `buildPermissionHeaders(resource, action)`                                                       | `src/app/shared/helpers/permission-headers.helper.ts`                                           | [`.agents/architecture.md`](.agents/architecture.md)                         |
@@ -72,6 +74,7 @@ live in [`.agents/`](.agents/); open the relevant doc before touching that area.
 | Standard response types (also: pagination, envelope)                                                            | `ServiceResponseInterface`, `PaginationResponseInterface`                                        | `src/app/shared/interfaces/response.interface.ts`                                               | —                                                                            |
 | Validate a bearer token value                                                                                   | `isUsableBearerToken()`                                                                          | `src/app/shared/helpers/bearer-token.helper.ts`                                                 | —                                                                            |
 | Dates and times (also: Temporal, Date, timezone, now)                                                           | Global `Temporal` (native, or `temporal-polyfill/global`)                                        | `Temporal.Now.instant()`, `Temporal.PlainDate.from(...)`                                        | —                                                                            |
+| Spanish (Ecuador) locale for pipes (also: LOCALE_ID, es-EC, currency, DatePipe, registerLocaleData)             | `provideNeocoreLocale()` — es-EC + USD, works hosted                                             | `src/app/shared/locale/neocore-locale.ts`                                                       | [`.agents/host-integration.md`](.agents/host-integration.md)                 |
 | Build-time configuration (also: env, API_URL, environment.ts)                                                   | `load-env.js` → `src/environments/environment.ts`                                                | `bun run env`                                                                                   | [`.agents/environment.md`](.agents/environment.md)                           |
 | Create a feature module (also: scaffold, generator)                                                             | Generator cloning `src/app/modules/template`                                                     | `bun run generate:module -- --name=<name> [--expose]`                                           | [`src/app/modules/template/README.md`](src/app/modules/template/README.md)   |
 
@@ -106,7 +109,9 @@ node scaffold/generate.js --service=mf-template --target=. --force   # regenerat
 
 ## What NOT to do
 
-- No npm/yarn/pnpm, no `package-lock.json`: the lockfile is `bun.lock`.
+- No npm/yarn/pnpm and no versioned lockfile: `bun.lock` is gitignored and regenerated by `bun install`
+  (`@neocore/lib-components` is republished under the same version, so a committed lockfile breaks CI
+  with an integrity error).
 - Script names say what they do, not the tool (`format`, `format:check`, `verify`, `lint`), and no
   script is named `check`: it would shadow Bun's type checker (`bun check`). Pinned by
   `scripts/package-scripts.test.js`.
@@ -122,6 +127,8 @@ node scaffold/generate.js --service=mf-template --target=. --force   # regenerat
 - Do not hardcode Node/Bun versions: `.node-version` and `.bun-version` are the source of truth
   (CI `resolve_versions`, Dockerfile `ARG BUN_VERSION`, `package.json`), pinned by
   `scripts/tool-versions.test.js`.
+- Do not turn off `strict` (`tsconfig.json`) or `strictTemplates` (`angularCompilerOptions`): every
+  fork already compiles with both, and a new MF must not start weaker than them.
 - No `^`/`~` ranges on `@angular/*`, `@angular/build`, `@angular/cli`, `@angular-architects/native-federation`.
 - No `.npmrc` with tokens in the repo (CI generates it with `CI_JOB_TOKEN`).
 - No webpack/Module Federation config: this is Native Federation (`federation.config.mjs`).
