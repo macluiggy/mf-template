@@ -4,7 +4,7 @@
 #
 #   docker compose up -d --build
 #   docker compose ps                         # STATUS -> "Up X (healthy)"
-#   curl -i http://localhost:${WEB_PORT:-4250}/remoteEntry.json
+#   curl -i http://localhost:${WEB_PORT:-4250}/health
 services:
   mf-template:
     build:

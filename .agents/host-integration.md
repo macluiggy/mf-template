@@ -56,7 +56,7 @@ exposes: {
 - The key (`./TemplateRoutes`) must equal the exported symbol (`export const TemplateRoutes: Routes`).
 - Every exposed file is also listed in `tsconfig.federation.json` `files`.
 - `bun run generate:module -- --name=<name> --expose` does both edits.
-- Verify after `bun run build`: `dist/browser/remoteEntry.json` → `exposes[].key`.
+- Verify after `bun run build:federation`: `dist/browser/remoteEntry.json` → `exposes[].key`.
 
 ## Interceptors
 
@@ -138,7 +138,7 @@ the forks (see [`merge-changes-from-front-template.md`](merge-changes-from-front
 ## Ports
 
 Local dev ports already in use: container 4200, core/auth 4201, virtual office broker 4211. This
-template serves on **4250**; a fork picks a free port in `angular.json` (`serve-original.options.port`).
+template serves on **4250**; a fork picks a free port in `angular.json` (`serve.options.port`).
 
 ## Hot reload in the host
 
@@ -155,8 +155,9 @@ Requirements: the remote runs from a `localhost` dev server and the host manifes
 
 ## Dev server
 
-`bun run start` is `load-env` + plain `ng serve` (the Native Federation `serve` target), the same
-as frontcore and frontzohoadmin: no wrapper script. Startup and rebuild time grow with the size of
+`bun run start` is `load-env` + `ng serve` (plain standalone SPA). To serve the remote to the host,
+use `bun run start:federation` (`load-env` + `ng run <project>:serve-federation`), the same as
+frontcore and frontzohoadmin: no wrapper script. Startup and rebuild time grow with the size of
 the remote (exposes, components), not with extra tooling.
 
 - HMR needs no flag: the dev server enables it by default (`hmr` defaults to `liveReload`, which is

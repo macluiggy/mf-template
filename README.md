@@ -9,10 +9,12 @@ Requirements: [bun](https://bun.sh) 1.4+, Node 22.22+.
 
 ```bash
 bun install            # dependencies + .env from .env.example
-bun run start          # http://localhost:4250 (standalone, redirects to /template)
+bun run start          # http://localhost:4250 (standalone SPA, redirects to /template)
 bun run test           # unit tests (vitest) + script tests
 bun run lint           # oxlint
-bun run build          # dist/browser/remoteEntry.json exposing ./TemplateRoutes
+bun run build          # dist/browser (standalone SPA)
+bun run build:federation  # dist/browser/remoteEntry.json exposing ./TemplateRoutes (host remote)
+bun run start:federation  # Native Federation dev server for the host
 ```
 
 Set `SECRET_KEY` in `.env` to the host's value to read the session token stored by the host.

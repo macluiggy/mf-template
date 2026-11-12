@@ -6,8 +6,12 @@
 
 | `DIST_STAGE`      | Used by               | What happens                                                                      |
 | ----------------- | --------------------- | --------------------------------------------------------------------------------- |
-| `build` (default) | local / `compose.yml` | `bun install` + `bun run build` inside the image (uses `.env`, or `.env.example`) |
+| `build` (default) | local / `compose.yml` | `bun install` + `bun run build` (standalone SPA) inside the image (uses `.env`, or `.env.example`) |
 | `prebuilt`        | CI `build_image`      | copies `dist/` produced by `build_app`                                            |
+
+`bun run build` emits the standalone SPA (`dist/browser/index.html`); `bun run build:federation`
+adds the Native Federation manifest (`dist/browser/remoteEntry.json`) used by the host. The CI
+`build_app` job runs `build:federation` when the repo has a `federation.config.mjs`.
 
 Runtime: `nginx:alpine-slim`, non-root (`USER nginx` + `CAP_NET_BIND_SERVICE`), `tini` as PID 1,
 read-only served files, `HEALTHCHECK` on `/health`. Private `@neocore` packages in a local build:

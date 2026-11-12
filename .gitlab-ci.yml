@@ -279,8 +279,14 @@ build_app:
       ENTITY_ROOT=$ENTITY_ROOT
       SECRET_KEY=$SECRET_KEY
       EOF
-    - bun run build
-    - test -f dist/browser/remoteEntry.json
+    # A plain SPA has no federation manifest; only remotes build one.
+    - |
+      if [ -f federation.config.mjs ]; then
+        bun run build:federation
+      else
+        bun run build
+      fi
+    - '[ ! -f federation.config.mjs ] || test -f dist/browser/remoteEntry.json'
   artifacts:
     paths:
       - dist/

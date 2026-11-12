@@ -31,7 +31,7 @@ git merge template/main --allow-unrelated-histories   # flag needed only for the
 | `.agents/capabilities.local.md`                                                                            | fork                                                | Never edited in the template                                                          |
 | `app.routes.ts`, `app.config.ts`                                                                           | merge both                                          | Keep `provideMfHttpClient()`                                                          |
 
-After resolving: `bun install && bun run lint && bun run test && bun run build`, and check
+After resolving: `bun install && bun run lint && bun run test && bun run build:federation`, and check
 `dist/browser/remoteEntry.json` still lists every exposed key.
 
 Report the fork's general changes (fixes, tooling, config, CI, test setup) as upstream candidates

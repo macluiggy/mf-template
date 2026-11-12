@@ -104,8 +104,10 @@ Fork-only capabilities: [`.agents/capabilities.local.md`](.agents/capabilities.l
 ```bash
 bun install                  # also creates .env from .env.example (never overwrites) and,
                              # the first time, indexes the repo with CodeGraph (.codegraph/)
-bun run start                # load-env + ng serve on http://localhost:4250
-bun run build                # load-env + federation build -> dist/browser/remoteEntry.json
+bun run start                # load-env + ng serve (standalone SPA) on http://localhost:4250
+bun run build                # load-env + ng build -> dist/browser (standalone SPA)
+bun run start:federation     # Native Federation dev server (serves remoteEntry.json)
+bun run build:federation     # load-env + federation build -> dist/browser/remoteEntry.json
 bun run test                 # vitest (Angular unit tests) + node:test (scripts)
 bun run lint                 # oxlint (warnings fail locally; advisory in CI)
 bun run format               # oxfmt (write); format:check verifies
