@@ -1,22 +1,19 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
-import { PubSubService } from '../../../../shared/services/pubsub.service';
+import { providePubSubMock } from '../../../../../testing';
 import { TemplateService } from '../../services/template.service';
 import { TemplateListPage } from './template-list.page';
 
 describe('TemplateListPage', () => {
-  const pubsub = {
-    error: vi.fn<PubSubService['error']>(),
-    loading: vi.fn<PubSubService['loading']>(),
-  };
+  const { mock: pubsub, providers: pubsubProviders } = providePubSubMock();
 
   async function render(list: TemplateService['list']) {
     await TestBed.configureTestingModule({
       imports: [TemplateListPage],
       providers: [
         { provide: TemplateService, useValue: { list } },
-        { provide: PubSubService, useValue: pubsub },
+        ...pubsubProviders,
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(TemplateListPage);
