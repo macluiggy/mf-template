@@ -84,6 +84,13 @@ The host subscribes to these topics (`frontcontainer/src/app/app.component.ts`);
 | `login-redirect`               | `boolean`                | Post-login navigation |
 | `clearBreadCrumb`              | `boolean`                | Clears the breadcrumb |
 
+- Never publish `loading(true)`/`loading(false)` by hand: the host shows one global loader, so
+  overlapping operations would hide it too early. Use `LoadingTrackerService.track()`, which
+  reference-counts them and publishes `loading(false)` only when the last one finishes.
+- For errors, publish `pubSub.error(toUserMessage(err))`: it reads the `message` of the backend
+  envelope. In hosted mode the host's error interceptor already toasts HTTP errors, so show one
+  yourself only for non-HTTP failures (validation, file parsing, a rejected promise).
+
 `pubsub-js` is skipped from federation sharing (CommonJS shape), so every app bundles its own copy.
 The bus is still shared: pubsub-js registers itself on `window.PubSub` and a later copy reuses the
 existing instance (it logs "PubSub already loaded, using existing version" — expected, not an error).
