@@ -68,6 +68,7 @@ RUN apk update && \
 # Served files stay owned by root and read-only (SonarQube docker:S6504).
 COPY --from=dist_src /app/dist/browser /usr/share/nginx/html
 COPY --chmod=0444 nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=0444 nginx.remote-headers.conf /etc/nginx/conf.d/remote-headers.inc
 
 RUN chmod -R a=rX /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx /var/log/nginx && \
