@@ -5,6 +5,7 @@ import {
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
+import { environment } from '../../../environments/environment';
 import { provideAppCore } from '../../core/app-core.providers';
 import { AUTH_TOKEN_PROVIDER } from '../../core/auth-token';
 import { KeyValueStorage } from '../../core/key-value-storage';
@@ -17,8 +18,15 @@ import { PubSubNotifier } from './pubsub/pubsub-notifier';
 import { EncryptedKeyValueStorage } from './storage/encrypted-key-value-storage';
 import { StorageEnum } from './storage/storage.enum';
 
+// The NEOCORE preset is optional, so the spec brings its own secret instead of
+// relying on SECRET_KEY in .env (`bun run test` reads only .env.example).
+const TEST_SECRET_KEY = 'test-secret-key-neocore';
+
 describe('provideNeocoreHost', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    environment.secretKey = TEST_SECRET_KEY;
+    localStorage.clear();
+  });
 
   it('overrides every core default with the NEOCORE adapter', () => {
     TestBed.configureTestingModule({

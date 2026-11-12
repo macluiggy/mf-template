@@ -12,7 +12,8 @@ import type { StorageEnum } from './storage.enum';
  * — keep it identical in every environment.
  *
  * The client is created on first use, never at module load: importing this
- * file must not require a valid SECRET_KEY.
+ * file must not require a valid SECRET_KEY. Without SECRET_KEY the first
+ * storage access throws (the NEOCORE preset is the only consumer).
  */
 @Injectable()
 export class StorageService {
@@ -45,7 +46,15 @@ export class StorageService {
   }
 
   private encrypted(): EncryptStorageNoble {
-    this.client ??= new EncryptStorageNoble(environment.secretKey);
+    if (!this.client) {
+      const secretKey = environment.secretKey;
+      if (!secretKey) {
+        throw new Error(
+          'SECRET_KEY is not set: the NEOCORE storage adapter encrypts with it (same value as the host).',
+        );
+      }
+      this.client = new EncryptStorageNoble(secretKey);
+    }
     return this.client;
   }
 }
