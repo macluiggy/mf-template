@@ -1,4 +1,6 @@
-# Pipeline for a Neocore micro-frontend (modeled on frontcore).
+# NEOCORE GitLab CI preset: the pipeline of the NEOCORE fleet (gitads
+# registry, nc_core runners, SSH deploy to the compose file that lives on each
+# server). The generic CI of the template is `.github/workflows/ci.yml`.
 # resolve_versions -> install -> test -> security -> build -> docker -> deploy
 #
 # Canonical template: every `{{TOKEN}}` is derived from `--service` by
@@ -275,8 +277,14 @@ build_app:
       SECRET_KEY=$SECRET_KEY
       {{EXTRA_ENV_LINES}}
       EOF
-    - bun run build
-    - test -f dist/browser/remoteEntry.json
+    # A plain SPA has no federation manifest; only remotes build one.
+    - |
+      if [ -f federation.config.mjs ]; then
+        bun run build:federation
+      else
+        bun run build
+      fi
+    - '[ ! -f federation.config.mjs ] || test -f dist/browser/remoteEntry.json'
   artifacts:
     paths:
       - dist/
@@ -319,8 +327,16 @@ build_image:
       IMAGE_COMMIT="$CI_REGISTRY_IMAGE:${VERSION}-${ENV_CODE}-${CI_COMMIT_SHORT_SHA}"
       IMAGE_CHANNEL="$CI_REGISTRY_IMAGE:${CHANNEL}"
       # DIST_STAGE=prebuilt reuses dist/ from build_app instead of rebuilding.
+      # CORS is only needed by a federated remote (the host fetches
+      # remoteEntry.json cross-origin), so the image ships it only when the
+      # repo builds a federation manifest (same condition as build_app).
+      FEDERATION_ARG=""
+      if [ -f federation.config.mjs ]; then
+        FEDERATION_ARG="--build-arg FEDERATION=true"
+      fi
       docker build --target runtime \
         --build-arg DIST_STAGE=prebuilt \
+        $FEDERATION_ARG \
         --build-arg BUN_VERSION="$BUN_VERSION" \
         --build-arg VERSION="$VERSION" \
         -t "$IMAGE_COMMIT" -t "$IMAGE_CHANNEL" .

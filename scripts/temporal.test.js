@@ -43,7 +43,7 @@ test('standalone builds and tests load the Temporal polyfill', () => {
   // Forks rename the project: read the only one instead of `mf-template`.
   const [project] = Object.values(JSON.parse(read('angular.json')).projects);
   const { architect } = project;
-  for (const target of ['esbuild', 'build-test']) {
+  for (const target of ['build', 'build-test']) {
     assert.ok(
       architect[target].options.polyfills?.includes('temporal-polyfill/global'),
       `${target} polyfills must include temporal-polyfill/global`,

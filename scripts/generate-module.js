@@ -160,7 +160,7 @@ function main(argv) {
 Next steps:
   1. Standalone dev: add to src/app/app.routes.ts
      { path: '${cases.kebab}', loadChildren: () => import('./modules/${cases.kebab}/${cases.kebab}.routes').then((m) => m.${cases.pascal}Routes) },
-  2. ${argv.includes('--expose') ? 'Register' : 'To load it from the host, add it to `exposes` in federation.config.mjs and tsconfig.federation.json, then register'} it in the ms-core manifest:
+  2. ${argv.includes('--expose') ? 'Register' : 'To load it from the host, add it to `exposes` in federation.config.mjs and tsconfig.federation.json, then register'} it in the host manifest (NEOCORE: ms-core):
      exposedModule '${cases.pascal}Routes', typeRemote 'module' (see AGENTS.md).
   3. Adjust the permission resource in enums/${cases.kebab}-action.enum.ts and the API path in services/.
   4. Run 'bun run format' (longer names can exceed the line width).`);

@@ -19,45 +19,12 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-architects/native-federation:build",
-          "options": {
-            "cacheExternalArtifacts": true,
-            "tsConfig": "tsconfig.federation.json"
-          },
-          "configurations": {
-            "production": {
-              "target": "mf-template:esbuild:production"
-            },
-            "development": {
-              "target": "mf-template:esbuild:development",
-              "dev": true
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "serve": {
-          "builder": "@angular-architects/native-federation:build",
-          "options": {
-            "target": "mf-template:serve-original:development",
-            "tsConfig": "tsconfig.federation.json",
-            "rebuildDelay": 0,
-            "cacheExternalArtifacts": true,
-            "dev": true,
-            "devServer": true,
-            "port": 0
-          }
-        },
-        "esbuild": {
           "builder": "@angular/build:application",
           "options": {
             "outputPath": "dist",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js",
-              "es-module-shims",
-              "temporal-polyfill/global"
-            ],
+            "polyfills": ["zone.js", "temporal-polyfill/global"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "allowedCommonJsDependencies": ["encrypt-storage", "pubsub-js"],
@@ -91,26 +58,101 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "federation": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1mb",
+                  "maximumError": "2mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "extractLicenses": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/main.ts",
+                  "with": "src/main.federation.ts"
+                }
+              ],
+              "polyfills": [
+                "zone.js",
+                "es-module-shims",
+                "temporal-polyfill/global"
+              ]
+            },
+            "federation-development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/main.ts",
+                  "with": "src/main.federation.ts"
+                }
+              ],
+              "polyfills": [
+                "zone.js",
+                "es-module-shims",
+                "temporal-polyfill/global"
+              ]
             }
           },
           "defaultConfiguration": "production"
         },
-        "serve-original": {
+        "build-federation": {
+          "builder": "@angular-architects/native-federation:build",
+          "options": {
+            "cacheExternalArtifacts": true,
+            "tsConfig": "tsconfig.federation.json"
+          },
+          "configurations": {
+            "production": {
+              "target": "mf-template:build:federation"
+            },
+            "development": {
+              "target": "mf-template:build:federation-development",
+              "dev": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "mf-template:esbuild:production"
+              "buildTarget": "mf-template:build:production"
             },
             "development": {
-              "buildTarget": "mf-template:esbuild:development"
+              "buildTarget": "mf-template:build:development"
+            },
+            "federation": {
+              "buildTarget": "mf-template:build:federation-development",
+              "headers": {
+                "Access-Control-Allow-Origin": "*"
+              }
             }
           },
           "defaultConfiguration": "development",
           "options": {
-            "port": 4250,
-            "headers": {
-              "Access-Control-Allow-Origin": "*"
-            }
+            "port": 4250
+          }
+        },
+        "serve-federation": {
+          "builder": "@angular-architects/native-federation:build",
+          "options": {
+            "target": "mf-template:serve:federation",
+            "tsConfig": "tsconfig.federation.json",
+            "rebuildDelay": 0,
+            "cacheExternalArtifacts": true,
+            "dev": true,
+            "devServer": true,
+            "port": 0
           }
         },
         "build-test": {

@@ -1,19 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
-import { providePubSubMock } from '../../../../../testing';
+import { provideNotifierMock } from '../../../../../testing';
 import { TemplateService } from '../../services/template.service';
 import { TemplateListPage } from './template-list.page';
 
 describe('TemplateListPage', () => {
-  const { mock: pubsub, providers: pubsubProviders } = providePubSubMock();
+  const { mock: notifier, providers: notifierProviders } =
+    provideNotifierMock();
 
   async function render(list: TemplateService['list']) {
     await TestBed.configureTestingModule({
       imports: [TemplateListPage],
       providers: [
         { provide: TemplateService, useValue: { list } },
-        ...pubsubProviders,
+        ...notifierProviders,
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(TemplateListPage);
@@ -41,16 +42,16 @@ describe('TemplateListPage', () => {
 
     expect(list).toHaveBeenCalledWith({ limit: 10, page: 1 });
     expect(element.textContent).toContain('First');
-    expect(pubsub.loading).toHaveBeenNthCalledWith(1, true);
-    expect(pubsub.loading).toHaveBeenLastCalledWith(false);
+    expect(notifier.loading).toHaveBeenNthCalledWith(1, true);
+    expect(notifier.loading).toHaveBeenLastCalledWith(false);
   });
 
-  it('shows the error state and notifies the host when loading fails', async () => {
+  it('shows the error state and notifies the user when loading fails', async () => {
     const element = await render(
       vi.fn<TemplateService['list']>(() => throwError(() => new Error('boom'))),
     );
 
     expect(element.querySelector('[role="alert"]')).not.toBeNull();
-    expect(pubsub.error).toHaveBeenCalledOnce();
+    expect(notifier.error).toHaveBeenCalledOnce();
   });
 });

@@ -1,7 +1,7 @@
 import { type Provider } from '@angular/core';
 import type { Mock } from 'vitest';
 
-import { PubSubService } from '../app/shared/services/pubsub.service';
+import { PubSubService } from '../pubsub/pubsub.service';
 
 /**
  * Spy for every public method of {@link PubSubService}, so a spec can assert

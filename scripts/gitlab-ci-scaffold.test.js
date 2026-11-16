@@ -10,6 +10,7 @@ const {
   parseArgs,
   readConfig,
   render,
+  serviceWarning,
 } = require('../scaffold/generate.js');
 
 const root = path.join(__dirname, '..');
@@ -119,11 +120,19 @@ test('without per-environment overrides every environment uses the service name'
   assert.equal(tokens.SERVICE_NAME_PREPROD, 'core');
 });
 
-test('derive rejects a service without the mf- prefix', () => {
-  assert.throws(
-    () => derive('template', readConfig().shared),
-    /must start with "mf-"/,
+test('a service without the mf- prefix is accepted with a warning', () => {
+  const tokens = derive('template', readConfig().shared);
+
+  assert.equal(tokens.SERVICE_NAME, 'template');
+  assert.equal(tokens.CONTAINER_NAME, 'template');
+  assert.equal(tokens.COMPOSE_IMAGE_VAR, 'FRONT_TEMPLATE_IMAGE_COMMIT');
+  assert.match(tokens.COMPOSE_FILE_DEV, /\/template\.yml$/);
+  assert.match(
+    serviceWarning('template'),
+    /does not start with "mf-"/,
+    'the missing prefix must be reported as a warning',
   );
+  assert.equal(serviceWarning('mf-template'), null);
 });
 
 test('every template token is resolved', () => {

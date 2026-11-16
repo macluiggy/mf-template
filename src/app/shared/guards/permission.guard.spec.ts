@@ -4,19 +4,17 @@ import type {
   RouterStateSnapshot,
 } from '@angular/router';
 
-import { PubSubService } from '../services/pubsub.service';
-import { StorageService } from '../services/storage.service';
+import { createNotifierMock } from '../../../testing';
+import { Notifier } from '../../core/notifier';
+import { PermissionChecker } from '../../core/permission-checker';
 import { PERMISSION_DENIED_MESSAGE, permissionGuard } from './permission.guard';
 
-function run(stored: Record<string, unknown>) {
-  const pubsub = { warning: vi.fn<PubSubService['warning']>() };
+function run(can: boolean) {
+  const notifier = createNotifierMock();
   TestBed.configureTestingModule({
     providers: [
-      { provide: PubSubService, useValue: pubsub },
-      {
-        provide: StorageService,
-        useValue: { getLocalStorage: (key: string) => stored[key] },
-      },
+      { provide: PermissionChecker, useValue: { can: () => can } },
+      { provide: Notifier, useValue: notifier },
     ],
   });
   const result = TestBed.runInInjectionContext(() =>
@@ -25,25 +23,21 @@ function run(stored: Record<string, unknown>) {
       {} as RouterStateSnapshot,
     ),
   );
-  return { pubsub, result };
+  return { notifier, result };
 }
 
 describe('permissionGuard', () => {
   it('lets the route through when the user has the permission', () => {
-    const { pubsub, result } = run({
-      PERMISSION: {
-        allow: { action: ['user:crear'] },
-        denny: { action: [] },
-        resource: ['user'],
-      },
-    });
+    const { notifier, result } = run(true);
+
     expect(result).toBe(true);
-    expect(pubsub.warning).not.toHaveBeenCalled();
+    expect(notifier.warning).not.toHaveBeenCalled();
   });
 
-  it('blocks the route and warns the host when it is missing', () => {
-    const { pubsub, result } = run({});
+  it('blocks the route and warns the user when it is missing', () => {
+    const { notifier, result } = run(false);
+
     expect(result).toBe(false);
-    expect(pubsub.warning).toHaveBeenCalledWith(PERMISSION_DENIED_MESSAGE);
+    expect(notifier.warning).toHaveBeenCalledWith(PERMISSION_DENIED_MESSAGE);
   });
 });

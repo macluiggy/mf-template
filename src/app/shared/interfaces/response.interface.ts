@@ -1,4 +1,4 @@
-/** Standard envelope returned by Neocore backends (`{ data, message }`). */
+/** Standard envelope returned by the backend (`{ data, message }`). */
 export interface ServiceResponseInterface<T> {
   data: T;
   message: string;

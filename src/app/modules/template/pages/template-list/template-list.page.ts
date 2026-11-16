@@ -5,9 +5,9 @@ import {
   type OnInit,
   signal,
 } from '@angular/core';
-import { finalize } from 'rxjs';
 
-import { PubSubService } from '../../../../shared/services/pubsub.service';
+import { Notifier } from '../../../../core/notifier';
+import { LoadingTrackerService } from '../../../../shared/services/loading-tracker.service';
 import { TemplateTableComponent } from '../../components/template-table/template-table.component';
 import { TEMPLATE_PAGE_SIZE } from '../../constants/template.constants';
 import type { TemplateInterface } from '../../interfaces/template.interface';
@@ -16,8 +16,9 @@ import { TemplateService } from '../../services/template.service';
 type ViewState = 'loading' | 'error' | 'ready';
 
 /**
- * Container page: owns state (signals), calls the service and talks to the
- * host through PubSub (global loader and toasts). Rendering is delegated to
+ * Container page: owns state (signals), calls the service and reports through
+ * the `Notifier` and `LoadingTrackerService` ports (console by default, host
+ * loader/toasts under the NEOCORE integration). Rendering is delegated to
  * presentational components.
  */
 @Component({
@@ -29,7 +30,8 @@ type ViewState = 'loading' | 'error' | 'ready';
 })
 export class TemplateListPage implements OnInit {
   private readonly service = inject(TemplateService);
-  private readonly pubsub = inject(PubSubService);
+  private readonly notifier = inject(Notifier);
+  private readonly loading = inject(LoadingTrackerService);
 
   protected readonly state = signal<ViewState>('loading');
   protected readonly items = signal<TemplateInterface[]>([]);
@@ -43,14 +45,13 @@ export class TemplateListPage implements OnInit {
 
   protected load(): void {
     this.state.set('loading');
-    this.pubsub.loading(true);
     this.service
       .list({ limit: TEMPLATE_PAGE_SIZE, page: this.page() })
-      .pipe(finalize(() => this.pubsub.loading(false)))
+      .pipe(this.loading.track)
       .subscribe({
         error: () => {
           this.state.set('error');
-          this.pubsub.error('The records could not be loaded.');
+          this.notifier.error('The records could not be loaded.');
         },
         next: (res) => {
           this.items.set(res.data.records);

@@ -3,13 +3,11 @@ import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { MsPrefixEnum } from '../../../shared/enums/ms-prefix.enum';
-import { buildPermissionHeaders } from '../../../shared/helpers/permission-headers.helper';
 import type {
   PaginationResponseInterface,
   ServiceResponseInterface,
 } from '../../../shared/interfaces/response.interface';
-import { TemplateAction } from '../enums/template-action.enum';
+import { TEMPLATE_API_PATH } from '../constants/template.constants';
 import type {
   TemplateInterface,
   TemplateParamsInterface,
@@ -18,7 +16,7 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class TemplateService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/${MsPrefixEnum.CORE}/template`;
+  private readonly baseUrl = `${environment.apiUrl}/${TEMPLATE_API_PATH}`;
 
   list(
     params: TemplateParamsInterface,
@@ -33,12 +31,6 @@ export class TemplateService {
     }
     return this.http.get<
       ServiceResponseInterface<PaginationResponseInterface<TemplateInterface[]>>
-    >(this.baseUrl, {
-      headers: buildPermissionHeaders(
-        TemplateAction.RESOURCE,
-        TemplateAction.LIST,
-      ),
-      params: query,
-    });
+    >(this.baseUrl, { params: query });
   }
 }
