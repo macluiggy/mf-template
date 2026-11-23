@@ -10,7 +10,7 @@ Two optional presets ride on top, and neither one is required:
 | Preset                                    | What it adds                                                                     | Enable it with                                   |
 | ----------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Native Federation remote                  | A `remoteEntry.json` a host container loads at runtime                             | `bun run build:federation` / `bun run start:federation` |
-| NEOCORE host integration (`frontcontainer`) | PubSub topics, encrypted storage with the host `SECRET_KEY`, device info, permissions | `provideNeocoreHost()` (see [`.agents/host-integration.md`](.agents/host-integration.md)) |
+| NEOCORE host integration (`frontcontainer`) | PubSub topics, encrypted storage with the host `SECRET_KEY`, device info, permissions | `TEMPLATE_PRESET=neocore` + `SECRET_KEY` (see [`.agents/host-integration.md`](.agents/host-integration.md)) |
 
 Without them the app runs on the core ports: console notifier, plain `localStorage`, no token,
 allow-all permissions.
@@ -28,8 +28,10 @@ bun run lint           # oxlint
 bun run build          # dist/browser (standalone SPA)
 ```
 
+`bun run start` runs the plain SPA; `bun run start:federation` runs it as a micro-frontend remote.
+
 `bun install` creates `.env` from `.env.example`. The only required variable is `API_URL`; every
-other one (`SECRET_KEY`, `ENTITY_ROOT`, the remote config call) is opt-in — see
+other one (`TEMPLATE_PRESET`, `SECRET_KEY`, `ENTITY_ROOT`, the remote config call) is opt-in — see
 [`.agents/environment.md`](.agents/environment.md).
 
 ## Start a project from this template

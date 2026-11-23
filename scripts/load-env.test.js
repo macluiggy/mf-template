@@ -19,6 +19,7 @@ const MANAGED_VARS = [
   'NODE_ENV',
   'SECRET_KEY',
   'SKIP_ENV_FETCH',
+  'TEMPLATE_PRESET',
 ];
 
 function sandbox(envContent) {
@@ -235,6 +236,66 @@ test('the NEOCORE preset writes SECRET_KEY and ENTITY_ROOT', async () => {
     const output = await run(dir, []);
     assert.match(output, /secretKey: "change-me-use-the-host-secret"/);
     assert.match(output, /entityRoot: "ROOT"/);
+  } finally {
+    fs.rmSync(dir, { force: true, recursive: true });
+  }
+});
+
+test('TEMPLATE_PRESET defaults to generic', async () => {
+  const dir = sandbox('API_URL=http://only-api-url.invalid\n');
+  try {
+    const output = await run(dir, []);
+    assert.match(output, /templatePreset: "generic"/);
+    // A generated string union keeps the type aligned with the loader.
+    assert.match(runInterface(dir), /templatePreset: 'generic' \| 'neocore';/);
+  } finally {
+    fs.rmSync(dir, { force: true, recursive: true });
+  }
+});
+
+test('TEMPLATE_PRESET=neocore writes neocore', async () => {
+  const dir = sandbox(
+    'API_URL=http://only-api-url.invalid\nTEMPLATE_PRESET=neocore\nSECRET_KEY=change-me-use-the-host-secret\n',
+  );
+  try {
+    const output = await run(dir, []);
+    assert.match(output, /templatePreset: "neocore"/);
+  } finally {
+    fs.rmSync(dir, { force: true, recursive: true });
+  }
+});
+
+test('an unknown TEMPLATE_PRESET fails with a clear message', async () => {
+  const dir = sandbox(
+    'API_URL=http://only-api-url.invalid\nTEMPLATE_PRESET=bogus\n',
+  );
+  try {
+    const result = await runResult(dir, []);
+    assert.equal(result.code, 1);
+    assert.ok(
+      result.stderr.includes(
+        'TEMPLATE_PRESET must be one of: generic, neocore (got "bogus")',
+      ),
+      result.stderr,
+    );
+  } finally {
+    fs.rmSync(dir, { force: true, recursive: true });
+  }
+});
+
+test('TEMPLATE_PRESET=neocore requires SECRET_KEY', async () => {
+  const dir = sandbox(
+    'API_URL=http://only-api-url.invalid\nTEMPLATE_PRESET=neocore\n',
+  );
+  try {
+    const result = await runResult(dir, []);
+    assert.equal(result.code, 1);
+    assert.ok(
+      result.stderr.includes(
+        "TEMPLATE_PRESET=neocore requires SECRET_KEY (10+ characters, identical to the host's)",
+      ),
+      result.stderr,
+    );
   } finally {
     fs.rmSync(dir, { force: true, recursive: true });
   }

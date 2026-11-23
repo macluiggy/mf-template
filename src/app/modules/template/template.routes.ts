@@ -5,7 +5,7 @@ import type { Routes } from '@angular/router';
 
 import { provideAppCore } from '../../core/app-core.providers';
 import { provideAppLocale } from '../../core/app-locale';
-import { provideNeocoreHost } from '../../integrations/neocore/neocore.providers';
+import { provideTemplatePreset } from '../../template-preset';
 
 /**
  * Exposed to the host as `./TemplateRoutes` (federation.config.mjs). The host
@@ -34,11 +34,11 @@ export const TemplateRoutes: Routes = [
     path: '',
     providers: [
       // The host never runs app.config.ts: the exposed route provides the core
-      // defaults (ports) itself, then lets the integration override them.
+      // defaults (ports) itself, then lets the preset override them.
       provideAppCore(),
+      // TEMPLATE_PRESET decides the adapters: after provideAppCore(), overrides.
+      provideTemplatePreset(),
       provideAppLocale(),
-      // NEOCORE host adapters: delete this line and src/app/integrations/neocore/.
-      provideNeocoreHost(),
     ],
   },
 ];

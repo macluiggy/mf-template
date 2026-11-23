@@ -46,12 +46,14 @@ describe('TemplateListPage', () => {
     expect(notifier.loading).toHaveBeenLastCalledWith(false);
   });
 
-  it('shows the error state and notifies the user when loading fails', async () => {
+  it('shows the error state without its own toast when loading fails', async () => {
     const element = await render(
       vi.fn<TemplateService['list']>(() => throwError(() => new Error('boom'))),
     );
 
     expect(element.querySelector('[role="alert"]')).not.toBeNull();
-    expect(notifier.error).toHaveBeenCalledOnce();
+    // The HTTP error interceptor shows the message, so the page must not
+    // duplicate it.
+    expect(notifier.error).not.toHaveBeenCalled();
   });
 });

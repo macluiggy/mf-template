@@ -5,8 +5,10 @@
  * Bakes the variables of `.env` into `src/environments/environment.ts` (and its
  * interface). Both files are generated and gitignored: never edit them by hand.
  *
- * Only `API_URL` is required: the template is a plain Angular app. The NEOCORE
- * preset adds `SECRET_KEY` and `ENTITY_ROOT`, both optional.
+ * Only `API_URL` is required: the template is a plain Angular app.
+ * `TEMPLATE_PRESET` chooses the preset by name (`generic` by default, or
+ * `neocore`), which `src/app/template-preset.ts` maps to providers. The NEOCORE
+ * preset adds `SECRET_KEY` (required when selected) and `ENTITY_ROOT` (optional).
  *
  * Sources, in order:
  *   1. `.env` (falls back to `.env.example` with a warning on a fresh clone).
@@ -48,8 +50,17 @@ const INTERFACE_FILE = path.join(TARGET_DIR, 'environment.interface.ts');
 const REQUIRED_VARS = ['API_URL'];
 // NEOCORE preset only: optional, and ignored by a plain app.
 const OPTIONAL_VARS = ['SECRET_KEY', 'ENTITY_ROOT'];
+// Preset selector, resolved by src/app/template-preset.ts.
+const TEMPLATE_PRESET_NAMES = ['generic', 'neocore'];
+const TEMPLATE_PRESET_NAME_DEFAULT = 'generic';
 // Reserved names: the remote config can never overwrite them.
-const BASE_KEYS = ['production', 'apiUrl', 'secretKey', 'entityRoot'];
+const BASE_KEYS = [
+  'production',
+  'apiUrl',
+  'templatePreset',
+  'secretKey',
+  'entityRoot',
+];
 const SENSITIVE_KEYS = new Set(['SECRET_KEY']);
 
 const log = {
@@ -128,6 +139,16 @@ function readBaseConfig() {
     production:
       env.get('NODE_ENV').default('DEV').asEnum(['DEV', 'PROD']) === 'PROD',
   };
+  // The preset is chosen by name; `src/app/template-preset.ts` maps it to
+  // providers. An unknown name fails here instead of silently falling back.
+  const templatePreset =
+    optionalVar('TEMPLATE_PRESET') ?? TEMPLATE_PRESET_NAME_DEFAULT;
+  if (!TEMPLATE_PRESET_NAMES.includes(templatePreset)) {
+    throw new Error(
+      `TEMPLATE_PRESET must be one of: ${TEMPLATE_PRESET_NAMES.join(', ')} (got "${templatePreset}")`,
+    );
+  }
+  baseConfig.templatePreset = templatePreset;
   // SECRET_KEY is only needed by the NEOCORE integration (provideNeocoreHost()):
   // the host encrypts the access token with it, so it must match the host's.
   // Optional for a plain app, but when it is set it must be valid:
@@ -141,6 +162,11 @@ function readBaseConfig() {
       );
     }
     baseConfig.secretKey = secretKey;
+  }
+  if (templatePreset === 'neocore' && secretKey === undefined) {
+    throw new Error(
+      "TEMPLATE_PRESET=neocore requires SECRET_KEY (10+ characters, identical to the host's)",
+    );
   }
   const entityRoot = optionalVar('ENTITY_ROOT');
   if (entityRoot !== undefined) baseConfig.entityRoot = entityRoot;
@@ -210,10 +236,15 @@ function writeFiles(baseConfig, remoteConfig) {
   // `secretKey` and `entityRoot` are optional: they exist only with the
   // NEOCORE preset (SECRET_KEY / ENTITY_ROOT in the environment). The optional
   // marker keeps the type stable for apps that never set them.
+  const presetUnion = TEMPLATE_PRESET_NAMES.map((name) => `'${name}'`).join(
+    ' | ',
+  );
   const interfaceContent = `${header}
 export interface Environment {
   production: boolean;
   apiUrl: string;
+  /** Preset chosen with TEMPLATE_PRESET. */
+  templatePreset: ${presetUnion};
   /** NEOCORE preset only: present when SECRET_KEY is set. */
   secretKey?: string;
   /** NEOCORE preset only: present when ENTITY_ROOT is set. */
@@ -248,6 +279,7 @@ async function main() {
   for (const key of REQUIRED_VARS) {
     log.info(`${key.padEnd(12)} = ${process.env[key]}`);
   }
+  log.info(`TEMPLATE_PRESET = ${baseConfig.templatePreset}`);
   for (const key of OPTIONAL_VARS) {
     const value = optionalVar(key);
     if (value === undefined) {

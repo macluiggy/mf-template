@@ -13,7 +13,7 @@ bun run generate:module -- --name=user-profile --expose   # module + exposed to 
 | Path                            | Role                                                                                                               |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `template.routes.ts`            | `TemplateRoutes: Routes` — the exposed entry. No HttpClient providers: hosted requests use the host's interceptors |
-| `pages/template-list/`          | Container page: signals state, calls the service, reports through `Notifier`/`LoadingTrackerService`               |
+| `pages/template-list/`          | Container page: signals state, calls the service, tracks the loader with `LoadingTrackerService`                     |
 | `components/template-table/`    | Presentational component: `input()`/`output()` only, no services                                                   |
 | `services/template.service.ts`  | HTTP calls: `${environment.apiUrl}/${TEMPLATE_API_PATH}`                                                            |
 | `interfaces/`                   | Request/response types of this module                                                                              |
@@ -28,6 +28,9 @@ bun run generate:module -- --name=user-profile --expose   # module + exposed to 
 - Loading and toasts go through the `Notifier` port (`loading`, `success`, `error`, ...); overlapping
   requests use `LoadingTrackerService` so the loader is ref-counted. The default adapter logs to the
   console; `provideNeocoreHost()` publishes the host's topics.
+- HTTP failures are already shown: `provideAppHttpClient()` installs `errorNotificationInterceptor`,
+  which notifies the envelope message once. A page that shows its own message instead sets
+  `SKIP_ERROR_NOTIFICATION` on the request, so the user never reads two toasts.
 - Permissions go through the `PermissionChecker` port or `permissionGuard(resource, action)`; the
   default allows everything, the NEOCORE integration reads the host's payloads.
 - HTTP is generic: `environment.apiUrl` plus a module-local path constant. Host-specific pieces
