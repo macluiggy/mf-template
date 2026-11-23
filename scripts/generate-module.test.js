@@ -82,6 +82,28 @@ test('transformContent keeps Angular template keywords intact', () => {
   );
 });
 
+test('transformContent keeps the shared template-preset import valid', () => {
+  const source =
+    "import { provideTemplatePreset } from '../../template-preset';";
+
+  assert.equal(transformContent(source, cases), source);
+});
+
+test('the real template module keeps its template-preset import after cloning', () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'src/app/modules/template/template.routes.ts'),
+    'utf8',
+  );
+
+  const output = transformContent(source, cases);
+
+  assert.match(
+    output,
+    /import \{ provideTemplatePreset \} from '\.\.\/\.\.\/template-preset';/,
+  );
+  assert.match(output, /export const SampleFeatureRoutes: Routes/);
+});
+
 test('generateModule clones the template module and refuses to overwrite', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gen-module-'));
   const templateDir = path.join(root, 'src/app/modules/template');

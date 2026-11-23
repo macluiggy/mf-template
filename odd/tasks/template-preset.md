@@ -1,0 +1,28 @@
+# Generic front template by default, NEOCORE as a preset chosen by name
+
+Objective: the template runs on its generic core ports unless the project opts into NEOCORE, chosen by name like ms-template's `TEMPLATE_PRESET`; every integration stays a removable piece. Branch: `feat/template-preset` (mf-template, then front-template by merge). Delivery: single PR per repo. Runner: `bun run lint`, `bun run format:check`, `bun run build`, `bun run build:federation`, `bun run test`.
+
+## Specs
+
+- S1 (user, 2026-11-23, verbatim): "necesito que queden iguales, pero que este permita que se levante como microfront o como front normal"
+- S2 (user, verbatim): "el default ahora esta como microfront osea npm run start, y para front normal sea un comando aparte o como esta ahora? revisale y vamos con la mejor opcion"
+- S3 (user, verbatim): "quiero que quede totalmente generico como en el backtemplate y ms template ... que quede como el backtemplate totalmente desacoplado, alta cohesion bajo acoplamiento, osea que quede como piezas de lego que son facilmente remobiles"
+- S4 (user, verbatim): "para que se pueda usar en cualquier proyecto de front con toda la funcionalidad inicial recomendada para la mayoria de fronts"
+- S5 (decision for S2): run modes stay as they are — `start`/`build` = plain SPA (default), `start:federation`/`build:federation` = micro-frontend remote. Verified on the base: `build` emits no `remoteEntry.json`, `build:federation` does.
+- S6 (decision for S3): `TEMPLATE_PRESET=generic|neocore` (default `generic`) in `.env`, baked by `load-env.js` into `environment.templatePreset`; an unknown value fails the build with a clear message; `neocore` requires `SECRET_KEY`. One file, `src/app/template-preset.ts`, maps the name to providers (`generic` → none, `neocore` → `provideNeocoreHost()`) and is the only place outside `integrations/` that imports an integration. `app.config.ts` and every exposed route call `provideTemplatePreset()`.
+- S7: the generic test kit (`src/testing/`) does not import any integration; the NEOCORE test doubles live and are tested inside `src/app/integrations/neocore/`.
+- S8: removing NEOCORE = delete `src/app/integrations/neocore/`, its entry in `template-preset.ts` and its three dependencies; build and tests still pass. Docs say so.
+
+## Tasks
+
+| ID | Specs | What | Route | Status | Commit |
+|---|---|---|---|---|---|
+| T1 | S6, S7, S8 | Preset by name + decoupled test kit + docs | delegated (cmd-worker exhausted → opencode-worker) | done | (this commit) |
+| T2 | S1 | front-template takes the same commits (merge), both default branches end with the same tree | inline (git) | pending | — |
+| T3 | S4 | Recommended baseline features missing from the template | — | proposal, needs the owner | — |
+
+## Log
+
+- L1 (2026-11-23): user request (verbatim): "oye podrias revisar el @core/front-template/ y @core/mf-template/ que al igual que @core/backtemplate/ y @core/ms-template/ necesito que queden iguales, pero que este permita que se levante como microfront o como front normal, si me entiendes? es que quiero usar el template ya sea para microfrontends o un frontend normal, creo que ya esta asi pero no estoy seguro, la cosa es que el default ahora esta como microfront osea npm run start, y para front normal sea un comando aparte o como esta ahora? revisale y vamos con la mejor opcion, y ademas quiero que quede totalmente generico como en el backtemplate y ms template,ya que originalmente el backtemplate tenia cosas del neocore, pero ya se desacoplaron y se dejo generico, asi mismo necesito el front template para que se pueda usar en cualquier proyecto de front con toda la funcionalidad inicial recomendada para la mayoria de fronts, si me entiendes? cree en ti mismo, eres increible, tu puedes con todo, mmm creo que eso es todo no se si algo mas se me escape, cierto que quede como el backtemplate totalmente desacoplado, alta cohesion bajo acoplamiento, osea que quede como piezas de lego que son facilmente remobiles"
+- L2 (2026-11-23): findings on the base (mf-template origin/development f7b00b3, same tree 08f00f3 as front-template origin/development): (a) `start` is already the plain SPA, not the micro-frontend; (b) the docs say "without provideNeocoreHost() the app runs on the core ports", but `app.config.ts` and `template.routes.ts` call `provideNeocoreHost()` unconditionally, so every project ran the NEOCORE adapters (PubSub notifier, encrypted storage, NEOCORE permission checker, x-device-info header); (c) `src/testing/index.ts` re-exports the NEOCORE PubSub mock, so the generic test kit breaks if the integration is deleted. Baseline gates: build 0 (no remoteEntry.json), build:federation 0 (remoteEntry.json), test 0 (102 tests).
+- L3 (2026-11-23): T1 done. Command Code was exhausted on every model; OpenCode (deepseek-v4.1-flash-free) wrote it. Parent review: `provideTemplatePreset()` normalizes an unknown name to `generic` (needed so the build still compiles right after a preset is deleted); the build-time list of names lives in both `load-env.js` and `template-preset.ts`, so the removal steps now name both; `.agents/testing.md` fixed (it still said the PubSub mock is re-exported from `src/testing`). Gates observed by the parent: verify 0, test 0 (vitest 24 files / 104, node:test 62 pass), build 0 with `templatePreset: "generic"` and no remoteEntry.json, build:federation 0 with remoteEntry.json. Lego check (S8) in a scratch copy: deleted `src/app/integrations/neocore/`, removed `neocore` from `template-preset.ts` and `load-env.js`, `bun run build` completed with no reference left to the folder.

@@ -5,9 +5,9 @@ Angular has no runtime env: values are baked at build time by `load-env.js` into
 gitignored**; `start`, `build`, `watch` and `test` regenerate them first, so a fresh clone builds
 with no manual step.
 
-Only `API_URL` is required: the template is a plain Angular app. Everything NEOCORE-shaped
-(`SECRET_KEY`, `ENTITY_ROOT`, the remote config call) is opt-in — see
-[the NEOCORE preset](#the-neocore-preset).
+Only `API_URL` is required: the template is a plain Angular app. `TEMPLATE_PRESET` chooses the
+preset by name (`generic` by default, or `neocore`); everything NEOCORE-shaped (`SECRET_KEY`,
+`ENTITY_ROOT`, the remote config call) is opt-in — see [the NEOCORE preset](#the-neocore-preset).
 
 ## Sources and precedence
 
@@ -17,9 +17,10 @@ Only `API_URL` is required: the template is a plain Angular app. Everything NEOC
 3. `.env.example`, only when `.env` does not exist (prints a warning).
 4. Optional remote config: `GET $ENV_REMOTE_URL` — **opt-in**, the call only happens when
    `ENV_REMOTE_URL` is set. Extra keys are added as
-   optional properties; the base keys (`production`, `apiUrl`, `secretKey`, `entityRoot`) are never
-   overwritten. Best-effort: on failure/timeout the build continues with the values above and prints
-   a warning. `SKIP_ENV_FETCH=1` is a hard off switch, even when `ENV_REMOTE_URL` is set (tests do).
+   optional properties; the base keys (`production`, `apiUrl`, `templatePreset`, `secretKey`,
+   `entityRoot`) are never overwritten. Best-effort: on failure/timeout the build continues with the
+   values above and prints a warning. `SKIP_ENV_FETCH=1` is a hard off switch, even when
+   `ENV_REMOTE_URL` is set (tests do).
    Tests also run `load-env.js --example`: they read only `.env.example`, so a missing or
    personalized `.env` never breaks `bun run test` (process/CI variables still win).
 
@@ -30,7 +31,8 @@ An empty value counts as unset: CI writes `KEY=` when a variable is not configur
 | Variable               | Required | Notes                                                           |
 | ---------------------- | -------- | --------------------------------------------------------------- |
 | `API_URL`              | yes      | Gateway base URL, validated as URL → `environment.apiUrl`       |
-| `SECRET_KEY`           | only with `provideNeocoreHost()` | ≥ 10 chars, **identical to the host** → `environment.secretKey` (optional property) |
+| `TEMPLATE_PRESET`      | no       | `generic` (default) or `neocore` → `environment.templatePreset`; an unknown value fails the build. `neocore` requires `SECRET_KEY` |
+| `SECRET_KEY`           | with `TEMPLATE_PRESET=neocore` | ≥ 10 chars, **identical to the host** → `environment.secretKey` (optional property) |
 | `ENTITY_ROOT`          | no       | Root entity code → `environment.entityRoot` (optional property)  |
 | `NODE_ENV`             | no       | `DEV` (default) or `PROD` → `environment.production`            |
 | `ENV_REMOTE_URL`       | no       | Full URL of the remote env document; the fetch only runs when it is set |
@@ -39,11 +41,17 @@ An empty value counts as unset: CI writes `KEY=` when a variable is not configur
 
 ## The NEOCORE preset
 
+Enable it with `TEMPLATE_PRESET=neocore` and `SECRET_KEY` in `.env` (or the CI job variables).
+`load-env.js` bakes the name into `environment.templatePreset`, and `src/app/template-preset.ts`
+maps it to providers: `generic` adds nothing, `neocore` calls `provideNeocoreHost()`. That file is
+the only place outside `src/app/integrations/` that imports an integration; `app.config.ts` and
+every exposed route just call `provideTemplatePreset()` after `provideAppCore()`.
+
 `SECRET_KEY` and `ENTITY_ROOT` are read only by the NEOCORE integration
-(`src/app/integrations/neocore/`, wired by `provideNeocoreHost()`). Without it the template is a
-plain app: no secret, no entity root, no remote config call. The generated interface declares
-`secretKey` and `entityRoot` as optional properties, so the type is the same with or without the
-preset; the values are written only when the variables are set.
+(`src/app/integrations/neocore/`). With `generic` the template is a plain app: no secret, no entity
+root, no remote config call. The generated interface declares `secretKey` and `entityRoot` as
+optional properties, so the type is the same with or without the preset; the values are written
+only when the variables are set.
 
 The NEOCORE deployment points `ENV_REMOTE_URL` at its parameter service
 (`${API_URL}/ms-core/parameter/env`); any project may point it at its own configuration document.

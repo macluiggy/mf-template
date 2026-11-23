@@ -21,6 +21,9 @@ const path = require('node:path');
 
 const KEBAB = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 const PROTECTED = [
+  // Shared app file, not part of the module: keep its import path and symbol.
+  /provideTemplatePreset/g,
+  /template-preset/g,
   /TemplateRef/g,
   /templateUrl/g,
   /ng-template/g,
