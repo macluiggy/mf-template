@@ -11,6 +11,8 @@ import {
 } from '@angular/core';
 
 import { authInterceptor } from '../interceptors/auth.interceptor';
+import { errorNotificationInterceptor } from '../interceptors/error-notification.interceptor';
+import { requestIdInterceptor } from '../interceptors/request-id.interceptor';
 
 /**
  * Functional interceptors contributed by integrations.
@@ -44,9 +46,11 @@ const runContributedInterceptors: HttpInterceptorFn = (req, next) => {
  *     interceptors also apply when the host mounts the remote (the host never
  *     runs this app's `app.config.ts`).
  *
- * It always adds the Bearer header from `AUTH_TOKEN_PROVIDER` and every
- * interceptor contributed through `APP_HTTP_INTERCEPTORS`. Use the arguments
- * for interceptors that belong to the app itself.
+ * It always adds the Bearer header from `AUTH_TOKEN_PROVIDER`, shows one error
+ * message per failed request, correlates requests to `environment.apiUrl` with
+ * `x-request-id`, and runs every interceptor contributed through
+ * `APP_HTTP_INTERCEPTORS`. Use the arguments for interceptors that belong to
+ * the app itself.
  */
 export function provideAppHttpClient(
   ...extraInterceptors: HttpInterceptorFn[]
@@ -54,6 +58,8 @@ export function provideAppHttpClient(
   return provideHttpClient(
     withInterceptors([
       authInterceptor,
+      errorNotificationInterceptor,
+      requestIdInterceptor,
       ...extraInterceptors,
       runContributedInterceptors,
     ]),

@@ -30,7 +30,6 @@ from `src/testing` (never from the individual files):
 | ------------------------------------------ | --------------------------------------------------------------------- |
 | `createNotifierMock()` / `provideNotifierMock()` | The spec asserts the loader/toasts the code asked for           |
 | `createStorageMock(initial?)` / `provideStorageMock(initial?)` | The spec needs the `KeyValueStorage` port (token, session) |
-| `createPubSubMock()` / `providePubSubMock()` | The spec tests the NEOCORE integration (NEOCORE preset only: what it published to the host) |
 | `provideHttpTesting()`                     | The spec flushes the requests of a service with `HttpTestingController` |
 
 ```ts
@@ -42,8 +41,10 @@ TestBed.configureTestingModule({ providers: [provideHttpTesting(), ...providers]
 ```
 
 The kit is test-only: `tsconfig.app.json` excludes `src/testing/**` and the integrations' `testing/`
-folders (the PubSub mock lives next to the NEOCORE adapter but is re-exported from
-`src/testing/index.ts`), so none of it reaches the app bundle.
+folders, so none of it reaches the app bundle. The kit never imports an integration: the NEOCORE
+PubSub doubles (`createPubSubMock()` / `providePubSubMock()`) live in
+`src/app/integrations/neocore/testing/` and are imported from there, so deleting the integration
+leaves the kit intact.
 
 `template-list.page.spec.ts` is the reference: the generator copies it into every new module.
 If a fork needs another shared double, add it here (one file, exported from `index.ts`) instead of

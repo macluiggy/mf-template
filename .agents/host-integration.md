@@ -4,13 +4,15 @@ How the NEOCORE host `frontcontainer` loads this app as a Native Federation remo
 contract both sides must keep.
 
 > **This document is a preset.** Everything in it applies ONLY when the app is deployed as a remote
-> of the NEOCORE host. A plain SPA needs none of it: without `provideNeocoreHost()` the app runs
-> on the core ports (console notifier, plain localStorage, no token, allow-all permissions).
+> of the NEOCORE host. Enable it with `TEMPLATE_PRESET=neocore` and `SECRET_KEY`; a plain SPA uses
+> the default `TEMPLATE_PRESET=generic` and runs on the core ports (console notifier, plain
+> localStorage, no token, allow-all permissions).
 >
 > Every NEOCORE-shaped piece — PubSub, the encrypted storage with its `SECRET_KEY`, `x-device-info`,
 > `x-api-key` and the `ms-core` paths — lives in ONE folder:
-> [`src/app/integrations/neocore/`](../src/app/integrations/neocore/README.md). `provideNeocoreHost()`
-> binds all of it over the safe defaults of `provideAppCore()`; deleting that folder and its calls
+> [`src/app/integrations/neocore/`](../src/app/integrations/neocore/README.md).
+> `src/app/template-preset.ts` maps the preset name to `provideNeocoreHost()`, which binds all of it
+> over the safe defaults of `provideAppCore()`; deleting that folder and its entry in the preset map
 > removes the preset.
 
 ## How the host loads a remote

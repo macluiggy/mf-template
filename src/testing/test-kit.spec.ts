@@ -4,14 +4,11 @@ import { TestBed } from '@angular/core/testing';
 
 import { KeyValueStorage } from '../app/core/key-value-storage';
 import { Notifier } from '../app/core/notifier';
-import { PubSubService } from '../app/integrations/neocore/pubsub/pubsub.service';
 import {
   createNotifierMock,
-  createPubSubMock,
   createStorageMock,
   provideHttpTesting,
   provideNotifierMock,
-  providePubSubMock,
   provideStorageMock,
 } from './index';
 
@@ -83,31 +80,6 @@ describe('test kit', () => {
       notifier.warning('careful');
 
       expect(mock.warning).toHaveBeenCalledWith('careful');
-    });
-  });
-
-  describe('createPubSubMock', () => {
-    it('records what the page published to the host', () => {
-      const pubsub = createPubSubMock();
-
-      pubsub.loading(true);
-      pubsub.error('boom');
-
-      expect(pubsub.loading).toHaveBeenCalledWith(true);
-      expect(pubsub.error).toHaveBeenCalledWith('boom');
-    });
-  });
-
-  describe('providePubSubMock', () => {
-    it('replaces the pubsub service in the TestBed', () => {
-      const { mock, providers } = providePubSubMock();
-
-      TestBed.configureTestingModule({ providers });
-      const service = TestBed.inject(PubSubService);
-
-      service.loading(true);
-
-      expect(mock.loading).toHaveBeenCalledWith(true);
     });
   });
 
