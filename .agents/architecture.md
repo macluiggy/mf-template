@@ -13,17 +13,19 @@ src/
     ├── template-preset.ts                        TEMPLATE_PRESET name -> providers (only integration import outside integrations/)
     ├── core/                                     ports + safe local defaults (no host code)
     │   ├── app-locale.ts          provideAppLocale() + ES_EC_LOCALE preset (es-EC + USD)
+    │   ├── app-error-handler.ts   provideAppErrorHandler() (console + one toast)
     │   ├── auth-token.ts          AUTH_TOKEN_PROVIDER
     │   ├── key-value-storage.ts   KeyValueStorage + LocalStorageKeyValueStorage
     │   ├── notifier.ts            Notifier + ConsoleNotifier
     │   ├── permission-checker.ts  PermissionChecker + AllowAllPermissionChecker
+    │   ├── session-expired.ts     SESSION_EXPIRED_HANDLER (401 reaction, no-op default)
     │   └── app-core.providers.ts  provideAppCore()
     ├── integrations/
     │   └── neocore/              OPTIONAL preset: everything host-specific, bound by provideNeocoreHost()
     ├── shared/                   plumbing every feature needs (see capability map)
-    │   ├── guards/         permissionGuard (PermissionChecker + Notifier)
+    │   ├── guards/         permissionGuard (PermissionChecker), sessionGuard (AUTH_TOKEN_PROVIDER)
     │   ├── helpers/        isUsableBearerToken, toUserMessage
-    │   ├── interceptors/   generic authInterceptor (Bearer from AUTH_TOKEN_PROVIDER)
+    │   ├── interceptors/   authInterceptor, errorNotificationInterceptor, requestIdInterceptor
     │   ├── interfaces/     response envelopes
     │   ├── providers/      provideAppHttpClient() + APP_HTTP_INTERCEPTORS
     │   └── services/       LoadingTrackerService
@@ -84,6 +86,19 @@ With `TEMPLATE_PRESET=neocore` (and `SECRET_KEY`) the checker reads the host's
 `x-api-key: <resource>:<action>` built with `buildPermissionHeaders()`, and the microservice path
 prefix comes from `MsPrefixEnum`. All of it lives in `src/app/integrations/neocore/http/`; generic
 code builds its URL from `environment.apiUrl` plus a module-local path constant.
+
+## Removing a baseline piece
+
+Each baseline piece is one file plus one wiring line, so it can be deleted on its own: the build and
+the tests stay green, and nothing else in `core/`, `shared/` or `modules/` imports it.
+
+| Piece | Delete | Wiring to drop |
+| --- | --- | --- |
+| HTTP error message | `shared/interceptors/error-notification.interceptor.ts` (+ spec) | `errorNotificationInterceptor` (and `SKIP_ERROR_NOTIFICATION` imports) in `provideAppHttpClient()`, `shared/providers/http.providers.ts` |
+| 401 reaction | `core/session-expired.ts` (+ spec) | `SESSION_EXPIRED_HANDLER` injection in the error interceptor; the handler file goes with it |
+| Session guard | `shared/guards/session.guard.ts` (+ spec) | `canActivate: [sessionGuard()]` in every route that uses it |
+| Global error handler | `core/app-error-handler.ts` (+ spec) | `provideAppErrorHandler(),` in `app.config.ts` (it is registered there only, never in an exposed route) |
+| Request id | `shared/interceptors/request-id.interceptor.ts` (+ spec) | `requestIdInterceptor` in `provideAppHttpClient()`, `shared/providers/http.providers.ts` |
 
 ## Creating a module
 

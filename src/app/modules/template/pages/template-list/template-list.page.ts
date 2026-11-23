@@ -6,7 +6,6 @@ import {
   signal,
 } from '@angular/core';
 
-import { Notifier } from '../../../../core/notifier';
 import { LoadingTrackerService } from '../../../../shared/services/loading-tracker.service';
 import { TemplateTableComponent } from '../../components/template-table/template-table.component';
 import { TEMPLATE_PAGE_SIZE } from '../../constants/template.constants';
@@ -16,10 +15,10 @@ import { TemplateService } from '../../services/template.service';
 type ViewState = 'loading' | 'error' | 'ready';
 
 /**
- * Container page: owns state (signals), calls the service and reports through
- * the `Notifier` and `LoadingTrackerService` ports (console by default, host
- * loader/toasts under the NEOCORE integration). Rendering is delegated to
- * presentational components.
+ * Container page: owns state (signals), calls the service and reports the
+ * loader through the `LoadingTrackerService` port. A failed request shows its
+ * message through the HTTP error interceptor, so the page only switches to its
+ * own error state. Rendering is delegated to presentational components.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,7 +29,6 @@ type ViewState = 'loading' | 'error' | 'ready';
 })
 export class TemplateListPage implements OnInit {
   private readonly service = inject(TemplateService);
-  private readonly notifier = inject(Notifier);
   private readonly loading = inject(LoadingTrackerService);
 
   protected readonly state = signal<ViewState>('loading');
@@ -50,8 +48,8 @@ export class TemplateListPage implements OnInit {
       .pipe(this.loading.track)
       .subscribe({
         error: () => {
+          // The toast is the HTTP error interceptor's job (one message, not two).
           this.state.set('error');
-          this.notifier.error('The records could not be loaded.');
         },
         next: (res) => {
           this.items.set(res.data.records);

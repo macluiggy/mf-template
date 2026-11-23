@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideAppCore } from './core/app-core.providers';
+import { provideAppErrorHandler } from './core/app-error-handler';
 import { provideAppLocale } from './core/app-locale';
 import { provideAppHttpClient } from './shared/providers/http.providers';
 import { provideTemplatePreset } from './template-preset';
@@ -21,5 +22,8 @@ export const appConfig: ApplicationConfig = {
     provideTemplatePreset(),
     provideAppLocale(),
     provideAppHttpClient(),
+    // Global handler (console + one toast). Standalone only: a hosted remote
+    // runs the host's handler.
+    provideAppErrorHandler(),
   ],
 };
